@@ -1,0 +1,31 @@
+resource_types:
+- name: azure-blobstore
+  type: docker-image
+  source:
+    repository: christianang/azure-blobstore-resource
+
+resources:
+  - name: azure-blobstore-resource
+    type: git
+    source:
+      uri: git@github.com:christianang/azure-blobstore-resource.git
+      branch: master
+      private_key: {{git_private_key}}
+  - name: configuration
+    type: azure-blobstore
+    source:
+      storage_account_name: {{storage_account_name}}
+      storage_account_key: {{storage_account_key}}
+      container: {{container}}
+      versioned_file: example.json
+
+jobs:
+- name: print-config
+  plan:
+  - aggregate:
+    - get: azure-blobstore-resource
+    - get: configuration
+  - task: print-config
+    file: azure-blobstore-resource/example/tasks/print-config/task.sh
+    params:
+      CONFIGURATION_FILENAME: example.json

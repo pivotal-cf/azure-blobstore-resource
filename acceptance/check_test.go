@@ -21,6 +21,11 @@ var _ = Describe("Check", func() {
 	BeforeEach(func() {
 		rand.Seed(time.Now().UTC().UnixNano())
 		container = fmt.Sprintf("azureblobstore%d", rand.Int())
+		createContainer(container)
+	})
+
+	AfterEach(func() {
+		deleteContainer(container)
 	})
 
 	Context("when given any version", func() {
@@ -29,16 +34,11 @@ var _ = Describe("Check", func() {
 		)
 
 		BeforeEach(func() {
-			createContainer(container)
 			snapshotTimestamp = createBlobWithSnapshot(container, "example.json")
 		})
 
-		AfterEach(func() {
-			deleteContainer(container)
-		})
-
 		It("returns just the latest blob snapshot version", func() {
-			check := exec.Command(pathToMain)
+			check := exec.Command(pathToCheck)
 			check.Stderr = os.Stderr
 
 			stdin, err := check.StdinPipe()

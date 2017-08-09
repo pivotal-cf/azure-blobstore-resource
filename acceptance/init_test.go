@@ -1,4 +1,4 @@
-package main_test
+package acceptance_test
 
 import (
 	"log"
@@ -12,9 +12,9 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-func TestCheck(t *testing.T) {
+func TestAcceptance(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "cmd/check")
+	RunSpecs(t, "acceptance")
 }
 
 type Config struct {

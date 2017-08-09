@@ -23,14 +23,18 @@ type Config struct {
 }
 
 var (
-	pathToMain string
-	config     Config
+	pathToCheck string
+	pathToIn    string
+	config      Config
 )
 
 var _ = BeforeSuite(func() {
 	var err error
 
-	pathToMain, err = gexec.Build("github.com/christianang/azure-blobstore-resource/cmd/check")
+	pathToCheck, err = gexec.Build("github.com/christianang/azure-blobstore-resource/cmd/check")
+	Expect(err).NotTo(HaveOccurred())
+
+	pathToIn, err = gexec.Build("github.com/christianang/azure-blobstore-resource/cmd/in")
 	Expect(err).NotTo(HaveOccurred())
 
 	config = loadConfig()

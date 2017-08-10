@@ -29,3 +29,13 @@ jobs:
     file: azure-blobstore-resource/example/tasks/print-config/task.yml
     params:
       CONFIGURATION_FILENAME: example.json
+
+- name: write-config
+  plan:
+  - aggregate:
+    - get: azure-blobstore-resource
+  - task: write-config
+    file: azure-blobstore-resource/example/tasks/write-config/task.yml
+    params:
+      CONFIGURATION_FILENAME: example.json
+  - put: configuration

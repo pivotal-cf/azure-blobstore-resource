@@ -1,0 +1,19 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: ubuntu
+
+inputs:
+  - name: azure-blobstore-resource
+
+outputs:
+  - name: configuration
+
+params:
+  CONFIGURATION_FILENAME:
+
+run:
+  path: azure-blobstore-resource/example/tasks/write-config/task.sh

@@ -5,19 +5,10 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	"github.com/christianang/azure-blobstore-resource/api"
 	"github.com/christianang/azure-blobstore-resource/azure"
 )
-
-type Output struct {
-	Version OutputVersion `json:"version"`
-}
-
-type OutputVersion struct {
-	Snapshot time.Time `json:"snapshot"`
-}
 
 func main() {
 	destinationDirectory := os.Args[1]
@@ -44,13 +35,13 @@ func main() {
 		log.Fatal("failed to copy blob: ", err)
 	}
 
-	versionsJSON, err := json.Marshal(Output{
-		Version: OutputVersion{
+	versionsJSON, err := json.Marshal(api.Response{
+		Version: api.ResponseVersion{
 			Snapshot: inRequest.Version.Snapshot,
 		},
 	})
 	if err != nil {
-		log.Fatal("failed to marshal versions: ", err)
+		log.Fatal("failed to marshal output: ", err)
 	}
 
 	fmt.Println(string(versionsJSON))

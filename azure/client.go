@@ -1,6 +1,7 @@
 package azure
 
 import (
+	"io"
 	"io/ioutil"
 	"time"
 
@@ -57,4 +58,40 @@ func (c Client) Get(blobName string, snapshot time.Time) ([]byte, error) {
 	}
 
 	return data, nil
+}
+
+func (c Client) UploadFromStream(blobName string, stream io.Reader) error {
+	client, err := storage.NewBasicClient(c.storageAccountName, c.storageAccountKey)
+	if err != nil {
+		return err
+	}
+
+	blobClient := client.GetBlobService()
+	cnt := blobClient.GetContainerReference(c.container)
+	blob := cnt.GetBlobReference(blobName)
+
+	err = blob.CreateBlockBlobFromReader(stream, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c Client) CreateSnapshot(blobName string) (time.Time, error) {
+	client, err := storage.NewBasicClient(c.storageAccountName, c.storageAccountKey)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	blobClient := client.GetBlobService()
+	cnt := blobClient.GetContainerReference(c.container)
+	blob := cnt.GetBlobReference(blobName)
+
+	snapshot, err := blob.CreateSnapshot(&storage.SnapshotOptions{})
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return *snapshot, err
 }

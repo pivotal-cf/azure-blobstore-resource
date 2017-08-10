@@ -1,6 +1,7 @@
 package fakes
 
 import (
+	"io"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/storage"
@@ -28,6 +29,27 @@ type AzureClient struct {
 			Error    error
 		}
 	}
+	UploadFromStreamCall struct {
+		CallCount int
+		Stub      func(string, io.Reader) error
+		Receives  struct {
+			BlobName string
+			Stream   io.Reader
+		}
+		Returns struct {
+			Error error
+		}
+	}
+	CreateSnapshotCall struct {
+		CallCount int
+		Receives  struct {
+			BlobName string
+		}
+		Returns struct {
+			Snapshot time.Time
+			Error    error
+		}
+	}
 }
 
 func (a *AzureClient) ListBlobs(params storage.ListBlobsParameters) (storage.BlobListResponse, error) {
@@ -41,4 +63,22 @@ func (a *AzureClient) Get(blobName string, snapshot time.Time) ([]byte, error) {
 	a.GetCall.Receives.BlobName = blobName
 	a.GetCall.Receives.Snapshot = snapshot
 	return a.GetCall.Returns.BlobData, a.GetCall.Returns.Error
+}
+
+func (a *AzureClient) UploadFromStream(blobName string, stream io.Reader) error {
+	a.UploadFromStreamCall.CallCount++
+	a.UploadFromStreamCall.Receives.BlobName = blobName
+	a.UploadFromStreamCall.Receives.Stream = stream
+
+	if a.UploadFromStreamCall.Stub != nil {
+		return a.UploadFromStreamCall.Stub(blobName, stream)
+	}
+
+	return a.UploadFromStreamCall.Returns.Error
+}
+
+func (a *AzureClient) CreateSnapshot(blobName string) (time.Time, error) {
+	a.CreateSnapshotCall.CallCount++
+	a.CreateSnapshotCall.Receives.BlobName = blobName
+	return a.CreateSnapshotCall.Returns.Snapshot, a.CreateSnapshotCall.Returns.Error
 }

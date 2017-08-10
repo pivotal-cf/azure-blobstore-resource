@@ -1,6 +1,7 @@
 package acceptance_test
 
 import (
+	"io/ioutil"
 	"log"
 	"os"
 	"testing"
@@ -25,6 +26,7 @@ type Config struct {
 var (
 	pathToCheck string
 	pathToIn    string
+	pathToOut   string
 	config      Config
 )
 
@@ -35,6 +37,9 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 
 	pathToIn, err = gexec.Build("github.com/christianang/azure-blobstore-resource/cmd/in")
+	Expect(err).NotTo(HaveOccurred())
+
+	pathToOut, err = gexec.Build("github.com/christianang/azure-blobstore-resource/cmd/out")
 	Expect(err).NotTo(HaveOccurred())
 
 	config = loadConfig()
@@ -97,4 +102,24 @@ func createBlobWithSnapshot(container, blobName string) *time.Time {
 	Expect(err).NotTo(HaveOccurred())
 
 	return timestamp
+}
+
+func downloadBlobWithSnapshot(container, blobName string, snapshot time.Time) []byte {
+	client, err := storage.NewBasicClient(os.Getenv("TEST_STORAGE_ACCOUNT_NAME"), os.Getenv("TEST_STORAGE_ACCOUNT_KEY"))
+	Expect(err).NotTo(HaveOccurred())
+
+	blobClient := client.GetBlobService()
+	cnt := blobClient.GetContainerReference(container)
+	blob := cnt.GetBlobReference(blobName)
+
+	blobReader, err := blob.Get(&storage.GetBlobOptions{
+		Snapshot: &snapshot,
+	})
+	Expect(err).NotTo(HaveOccurred())
+	defer blobReader.Close()
+
+	data, err := ioutil.ReadAll(blobReader)
+	Expect(err).NotTo(HaveOccurred())
+
+	return data
 }

@@ -39,3 +39,5 @@ jobs:
     params:
       CONFIGURATION_FILENAME: example.json
   - put: configuration
+    params:
+      file: configuration/example.json

@@ -26,6 +26,6 @@ jobs:
     - get: azure-blobstore-resource
     - get: configuration
   - task: print-config
-    file: azure-blobstore-resource/example/tasks/print-config/task.sh
+    file: azure-blobstore-resource/example/tasks/print-config/task.yml
     params:
       CONFIGURATION_FILENAME: example.json

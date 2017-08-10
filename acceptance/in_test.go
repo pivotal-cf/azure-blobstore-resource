@@ -46,10 +46,10 @@ var _ = Describe("In", func() {
 		})
 
 		It("downloads the specific blob version and copies it to destination directory", func() {
-			check := exec.Command(pathToIn, tempDir)
-			check.Stderr = os.Stderr
+			in := exec.Command(pathToIn, tempDir)
+			in.Stderr = os.Stderr
 
-			stdin, err := check.StdinPipe()
+			stdin, err := in.StdinPipe()
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = io.WriteString(stdin, fmt.Sprintf(`{
@@ -68,7 +68,7 @@ var _ = Describe("In", func() {
 			))
 			Expect(err).NotTo(HaveOccurred())
 
-			outputJSON, err := check.Output()
+			outputJSON, err := in.Output()
 			Expect(err).NotTo(HaveOccurred())
 
 			var output struct {

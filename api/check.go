@@ -6,10 +6,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/storage"
 )
 
-type azureClient interface {
-	ListBlobs(params storage.ListBlobsParameters) (storage.BlobListResponse, error)
-}
-
 type Version struct {
 	Snapshot time.Time `json:"snapshot"`
 }

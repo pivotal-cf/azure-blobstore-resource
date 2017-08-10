@@ -10,24 +10,8 @@ import (
 	"github.com/christianang/azure-blobstore-resource/azure"
 )
 
-type CheckRequest struct {
-	Source  CheckRequestSource  `json:"source"`
-	Version CheckRequestVersion `json:"version"`
-}
-
-type CheckRequestSource struct {
-	StorageAccountName string `json:"storage_account_name"`
-	StorageAccountKey  string `json:"storage_account_key"`
-	Container          string `json:"container"`
-	VersionedFile      string `json:"versioned_file"`
-}
-
-type CheckRequestVersion struct {
-	Snapshot string `json:"snapshot"`
-}
-
 func main() {
-	var checkRequest CheckRequest
+	var checkRequest api.InRequest
 	err := json.NewDecoder(os.Stdin).Decode(&checkRequest)
 	if err != nil {
 		log.Fatal("failed to decode: ", err)

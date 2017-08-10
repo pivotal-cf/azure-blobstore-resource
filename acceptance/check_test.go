@@ -51,7 +51,7 @@ var _ = Describe("Check", func() {
 						"container": %q,
 						"versioned_file": "example.json"
 					},
-					"version": { "snapshot": "2017-01-01 01:01:01.0000000 +0000 UTC" }
+					"version": { "snapshot": "2017-08-08T23:27:16.2942812Z" }
 				}`,
 				config.StorageAccountName,
 				config.StorageAccountKey,

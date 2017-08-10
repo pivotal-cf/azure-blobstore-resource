@@ -6,8 +6,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/christianang/azure-blobstore-resource/api"
-	"github.com/christianang/azure-blobstore-resource/azure"
+	"github.com/pivotal-cf/azure-blobstore-resource/api"
+	"github.com/pivotal-cf/azure-blobstore-resource/azure"
 )
 
 func main() {

@@ -33,13 +33,13 @@ var (
 var _ = BeforeSuite(func() {
 	var err error
 
-	pathToCheck, err = gexec.Build("github.com/christianang/azure-blobstore-resource/cmd/check")
+	pathToCheck, err = gexec.Build("github.com/pivotal-cf/azure-blobstore-resource/cmd/check")
 	Expect(err).NotTo(HaveOccurred())
 
-	pathToIn, err = gexec.Build("github.com/christianang/azure-blobstore-resource/cmd/in")
+	pathToIn, err = gexec.Build("github.com/pivotal-cf/azure-blobstore-resource/cmd/in")
 	Expect(err).NotTo(HaveOccurred())
 
-	pathToOut, err = gexec.Build("github.com/christianang/azure-blobstore-resource/cmd/out")
+	pathToOut, err = gexec.Build("github.com/pivotal-cf/azure-blobstore-resource/cmd/out")
 	Expect(err).NotTo(HaveOccurred())
 
 	config = loadConfig()

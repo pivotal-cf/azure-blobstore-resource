@@ -45,7 +45,7 @@ resource_types:
 - name: azure-blobstore
   type: docker-image
   source:
-    repository: christianang/azure-blobstore-resource
+    repository: pivotal-cf/azure-blobstore-resource
 
 resources:
   - name: terraform-state

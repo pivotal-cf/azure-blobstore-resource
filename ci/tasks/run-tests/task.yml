@@ -1,0 +1,17 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: czero/cflinuxfs2
+
+inputs:
+  - name: azure-blobstore-resource
+
+run:
+  path: azure-blobstore-resource/ci/tasks/run-tests/task.sh
+
+params:
+  TEST_STORAGE_ACCOUNT_NAME:
+  TEST_STORAGE_ACCOUNT_KEY:

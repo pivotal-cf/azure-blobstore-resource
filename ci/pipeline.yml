@@ -11,6 +11,13 @@ resources:
     uri: https://github.com/pivotal-cf/azure-blobstore-resource.git
     branch: master
 
+- name: azure-blobstore-resource-image
+  type: docker-image
+  source:
+    repository: czero/azure-blobstore-resource
+    username: {{dockerhub_username}}
+    password: {{dockerhub_password}}
+
 jobs:
 - name: run-tests
   plan:
@@ -21,3 +28,14 @@ jobs:
     params:
       TEST_STORAGE_ACCOUNT_NAME: {{azure_account_name}}
       TEST_STORAGE_ACCOUNT_KEY: {{azure_account_key}}
+
+- name: build-image-rc
+  plan:
+  - aggregate:
+    - get: azure-blobstore-resource
+  - task: prepare-workspace
+    file: azure-blobstore-resource/ci/tasks/prepare-workspace/task.yml
+  - put: azure-blobstore-resource-image
+    params:
+      build: azure-blobstore-resource
+      tag: azure-blobstore-resource/tag

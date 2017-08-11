@@ -9,7 +9,6 @@ function main() {
   ln -s "${ROOT}/azure-blobstore-resource" "${GOPATH}/src/github.com/pivotal-cf/azure-blobstore-resource"
   pushd "${GOPATH}/src/github.com/pivotal-cf/azure-blobstore-resource" > /dev/null
     ./scripts/build
-    echo "release_candidate" > tag
   popd > /dev/null
 
   cp -R ${ROOT}/azure-blobstore-resource/* "${ROOT}/workspace"

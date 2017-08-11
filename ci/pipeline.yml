@@ -30,7 +30,7 @@ jobs:
       TEST_STORAGE_ACCOUNT_NAME: {{azure_account_name}}
       TEST_STORAGE_ACCOUNT_KEY: {{azure_account_key}}
 
-- name: build-image-rc
+- name: bump-image
   plan:
   - aggregate:
     - get: azure-blobstore-resource
@@ -38,8 +38,6 @@ jobs:
       trigger: true
   - task: prepare-workspace
     file: azure-blobstore-resource/ci/tasks/prepare-workspace/task.yml
-
   - put: azure-blobstore-resource-image
     params:
       build: workspace
-      tag: workspace/tag

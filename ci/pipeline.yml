@@ -38,7 +38,8 @@ jobs:
       trigger: true
   - task: prepare-workspace
     file: azure-blobstore-resource/ci/tasks/prepare-workspace/task.yml
+
   - put: azure-blobstore-resource-image
     params:
-      build: azure-blobstore-resource
-      tag: azure-blobstore-resource/tag
+      build: workspace
+      tag: workspace/tag

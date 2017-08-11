@@ -11,6 +11,8 @@ function main() {
     ./scripts/build
     echo "release_candidate" > tag
   popd > /dev/null
+
+  cp -R ${ROOT}/azure-blobstore-resource/* "${ROOT}/workspace"
 }
 
 main

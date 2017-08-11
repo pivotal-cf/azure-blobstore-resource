@@ -9,5 +9,8 @@ image_resource:
 inputs:
   - name: azure-blobstore-resource
 
+outputs:
+  - name: workspace
+
 run:
   path: azure-blobstore-resource/ci/tasks/prepare-workspace/task.sh

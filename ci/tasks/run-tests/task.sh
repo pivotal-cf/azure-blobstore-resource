@@ -1,9 +1,15 @@
 #!/bin/bash -exu
 
 ROOT=${PWD}
+GOPATH=${PWD}/go
+PATH=${GOPATH}/bin:$PATH
 
 function main() {
-  ginkgo -r "${ROOT}/azure-blobstore-resource"
+  go get github.com/onsi/ginkgo/ginkgo
+
+  mkdir -p "${GOPATH}/src/github.com/pivotal-cf"
+  ln -s "${ROOT}/azure-blobstore-resource" "${GOPATH}/src/github.com/pivotal-cf/azure-blobstore-resource"
+  ginkgo -r "${GOPATH}/src/github.com/pivotal-cf/azure-blobstore-resource"
 }
 
 main

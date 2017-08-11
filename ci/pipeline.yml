@@ -23,6 +23,7 @@ jobs:
   plan:
   - aggregate:
     - get: azure-blobstore-resource
+      trigger: true
   - task: run-tests
     file: azure-blobstore-resource/ci/tasks/run-tests/task.yml
     params:
@@ -33,6 +34,8 @@ jobs:
   plan:
   - aggregate:
     - get: azure-blobstore-resource
+      passed: [run-tests]
+      trigger: true
   - task: prepare-workspace
     file: azure-blobstore-resource/ci/tasks/prepare-workspace/task.yml
   - put: azure-blobstore-resource-image

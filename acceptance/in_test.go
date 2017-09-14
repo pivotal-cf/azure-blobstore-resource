@@ -75,11 +75,19 @@ var _ = Describe("In", func() {
 				Version struct {
 					Snapshot time.Time `json:"snapshot"`
 				} `json:"version"`
+				Metadata []struct {
+					Name  string `json:"name"`
+					Value string `json:"value"`
+				} `json:"metadata"`
 			}
 			err = json.Unmarshal(outputJSON, &output)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(output.Version.Snapshot).To(Equal(*snapshotTimestamp))
+			Expect(output.Metadata[0].Name).To(Equal("filename"))
+			Expect(output.Metadata[0].Value).To(Equal("example.json"))
+			Expect(output.Metadata[1].Name).To(Equal("url"))
+			Expect(output.Metadata[1].Value).To(Equal(fmt.Sprintf("https://%s.blob.core.windows.net/%s/example.json", config.StorageAccountName, container)))
 
 			_, err = os.Stat(filepath.Join(tempDir, "example.json"))
 			Expect(err).NotTo(HaveOccurred())

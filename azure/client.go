@@ -95,3 +95,15 @@ func (c Client) CreateSnapshot(blobName string) (time.Time, error) {
 
 	return *snapshot, err
 }
+
+func (c Client) GetBlobURL(blobName string) (string, error) {
+	client, err := storage.NewBasicClient(c.storageAccountName, c.storageAccountKey)
+	if err != nil {
+		return "", err
+	}
+
+	blobClient := client.GetBlobService()
+	cnt := blobClient.GetContainerReference(c.container)
+	blob := cnt.GetBlobReference(blobName)
+	return blob.GetURL(), nil
+}

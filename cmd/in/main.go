@@ -35,9 +35,24 @@ func main() {
 		log.Fatal("failed to copy blob: ", err)
 	}
 
+	url, err := azureClient.GetBlobURL(inRequest.Source.VersionedFile)
+	if err != nil {
+		log.Fatal("failed to get blob url: ", err)
+	}
+
 	versionsJSON, err := json.Marshal(api.Response{
 		Version: api.ResponseVersion{
 			Snapshot: inRequest.Version.Snapshot,
+		},
+		Metadata: []api.ResponseMetadata{
+			{
+				Name:  "filename",
+				Value: inRequest.Source.VersionedFile,
+			},
+			{
+				Name:  "url",
+				Value: url,
+			},
 		},
 	})
 	if err != nil {

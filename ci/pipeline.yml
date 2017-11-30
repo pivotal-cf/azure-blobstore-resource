@@ -8,15 +8,22 @@ resources:
 - name: azure-blobstore-resource
   type: git
   source:
-    uri: https://github.com/pivotal-cf/azure-blobstore-resource.git
+    uri: git@github.com:pivotal-cf/azure-blobstore-resource.git
     branch: master
+    private_key: ((git_private_key))
 
 - name: azure-blobstore-resource-image
   type: docker-image
   source:
     repository: czero/azure-blobstore-resource
-    username: {{dockerhub_username}}
-    password: {{dockerhub_password}}
+    username: ((dockerhub_username))
+    password: ((dockerhub_password))
+
+- name: base-image
+  type: docker-image
+  source:
+    repository: concourse/buildroot
+    tag: base
 
 jobs:
 - name: run-tests
@@ -27,14 +34,16 @@ jobs:
   - task: run-tests
     file: azure-blobstore-resource/ci/tasks/run-tests/task.yml
     params:
-      TEST_STORAGE_ACCOUNT_NAME: {{azure_account_name}}
-      TEST_STORAGE_ACCOUNT_KEY: {{azure_account_key}}
+      TEST_STORAGE_ACCOUNT_NAME: ((azure_account_name))
+      TEST_STORAGE_ACCOUNT_KEY: ((azure_account_key))
 
 - name: bump-image
   plan:
   - aggregate:
     - get: azure-blobstore-resource
       passed: [run-tests]
+      trigger: true
+    - get: base-image
       trigger: true
   - task: prepare-workspace
     file: azure-blobstore-resource/ci/tasks/prepare-workspace/task.yml

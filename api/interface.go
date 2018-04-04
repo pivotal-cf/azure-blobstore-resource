@@ -9,7 +9,7 @@ import (
 
 type azureClient interface {
 	ListBlobs(params storage.ListBlobsParameters) (storage.BlobListResponse, error)
-	Get(blobName string, snapshot time.Time) ([]byte, error)
+	Get(blobName string) ([]byte, error)
 	UploadFromStream(blobName string, stream io.Reader) error
 	CreateSnapshot(blobName string) (time.Time, error)
 }

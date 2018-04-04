@@ -37,7 +37,7 @@ var _ = Describe("Check", func() {
 			snapshotTimestamp = createBlobWithSnapshot(container, "example.json")
 		})
 
-		It("returns just the latest blob snapshot version", func() {
+		It("returns just the latest blob", func() {
 			check := exec.Command(pathToCheck)
 			check.Stderr = os.Stderr
 
@@ -50,8 +50,7 @@ var _ = Describe("Check", func() {
 						"storage_account_key": %q,
 						"container": %q,
 						"versioned_file": "example.json"
-					},
-					"version": { "snapshot": "2017-08-08T23:27:16.2942812Z" }
+					}
 				}`,
 				config.StorageAccountName,
 				config.StorageAccountKey,

@@ -29,7 +29,6 @@ func main() {
 	err = in.CopyBlobToDestination(
 		destinationDirectory,
 		inRequest.Source.VersionedFile,
-		inRequest.Version.Snapshot,
 	)
 	if err != nil {
 		log.Fatal("failed to copy blob: ", err)

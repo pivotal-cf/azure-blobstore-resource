@@ -4,7 +4,6 @@ import (
 	"io"
 	"io/ioutil"
 	"time"
-
 	"github.com/Azure/azure-sdk-for-go/storage"
 )
 
@@ -34,7 +33,7 @@ func (c Client) ListBlobs(params storage.ListBlobsParameters) (storage.BlobListR
 	return cnt.ListBlobs(params)
 }
 
-func (c Client) Get(blobName string, snapshot time.Time) ([]byte, error) {
+func (c Client) Get(blobName string) ([]byte, error) {
 	client, err := storage.NewBasicClient(c.storageAccountName, c.storageAccountKey)
 	if err != nil {
 		return []byte{}, err
@@ -43,9 +42,7 @@ func (c Client) Get(blobName string, snapshot time.Time) ([]byte, error) {
 	blobClient := client.GetBlobService()
 	cnt := blobClient.GetContainerReference(c.container)
 	blob := cnt.GetBlobReference(blobName)
-	blobReader, err := blob.Get(&storage.GetBlobOptions{
-		Snapshot: &snapshot,
-	})
+	blobReader, err := blob.Get(&storage.GetBlobOptions{})
 	if err != nil {
 		return []byte{}, err
 	}

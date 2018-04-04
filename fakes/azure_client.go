@@ -22,7 +22,6 @@ type AzureClient struct {
 		CallCount int
 		Receives  struct {
 			BlobName string
-			Snapshot time.Time
 		}
 		Returns struct {
 			BlobData []byte
@@ -58,10 +57,9 @@ func (a *AzureClient) ListBlobs(params storage.ListBlobsParameters) (storage.Blo
 	return a.ListBlobsCall.Returns.BlobListResponse, a.ListBlobsCall.Returns.Error
 }
 
-func (a *AzureClient) Get(blobName string, snapshot time.Time) ([]byte, error) {
+func (a *AzureClient) Get(blobName string) ([]byte, error) {
 	a.GetCall.CallCount++
 	a.GetCall.Receives.BlobName = blobName
-	a.GetCall.Receives.Snapshot = snapshot
 	return a.GetCall.Returns.BlobData, a.GetCall.Returns.Error
 }
 

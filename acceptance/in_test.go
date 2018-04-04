@@ -58,13 +58,11 @@ var _ = Describe("In", func() {
 						"storage_account_key": %q,
 						"container": %q,
 						"versioned_file": "example.json"
-					},
-					"version": { "snapshot": %q }
+					}
 				}`,
 				config.StorageAccountName,
 				config.StorageAccountKey,
 				container,
-				snapshotTimestamp.Format(time.RFC3339Nano),
 			))
 			Expect(err).NotTo(HaveOccurred())
 
@@ -83,7 +81,6 @@ var _ = Describe("In", func() {
 			err = json.Unmarshal(outputJSON, &output)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(output.Version.Snapshot).To(Equal(*snapshotTimestamp))
 			Expect(output.Metadata[0].Name).To(Equal("filename"))
 			Expect(output.Metadata[0].Value).To(Equal("example.json"))
 			Expect(output.Metadata[1].Name).To(Equal("url"))

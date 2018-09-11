@@ -35,7 +35,7 @@ func main() {
 		log.Fatal("failed to copy blob: ", err)
 	}
 
-	url, err := azureClient.GetBlobURL(inRequest.Source.VersionedFile)
+	url, err := azureClient.GetBlobURL(inRequest.Source.VersionedFile, inRequest.Version.Snapshot)
 	if err != nil {
 		log.Fatal("failed to get blob url: ", err)
 	}

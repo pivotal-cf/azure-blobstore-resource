@@ -3,8 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/pivotal-cf/azure-blobstore-resource/api"
 	"github.com/pivotal-cf/azure-blobstore-resource/azure"
@@ -38,6 +40,11 @@ func main() {
 	url, err := azureClient.GetBlobURL(inRequest.Source.VersionedFile, inRequest.Version.Snapshot)
 	if err != nil {
 		log.Fatal("failed to get blob url: ", err)
+	}
+
+	err = ioutil.WriteFile(filepath.Join(destinationDirectory, "url"), []byte(url), os.ModePerm)
+	if err != nil {
+		log.Fatal("failed to write blob url to output directory: ", err)
 	}
 
 	versionsJSON, err := json.Marshal(api.Response{

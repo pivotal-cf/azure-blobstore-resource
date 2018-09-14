@@ -111,7 +111,7 @@ func (c Client) GetBlobURL(blobName string, snapshot time.Time) (string, error) 
 		return "", err
 	}
 	q := u.Query()
-	q.Set("snapshot", snapshot.UTC().Format(time.RFC3339Nano))
+	q.Set("snapshot", snapshot.UTC().Format("2006-01-02T15:04:05.9999999Z"))
 	u.RawQuery = q.Encode()
 	return u.String(), nil
 }

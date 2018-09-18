@@ -3,7 +3,6 @@ package azure
 import (
 	"io"
 	"io/ioutil"
-	"net/url"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/storage"
@@ -97,7 +96,7 @@ func (c Client) CreateSnapshot(blobName string) (time.Time, error) {
 	return *snapshot, err
 }
 
-func (c Client) GetBlobURL(blobName string, snapshot time.Time) (string, error) {
+func (c Client) GetBlobURL(blobName string) (string, error) {
 	client, err := storage.NewBasicClient(c.storageAccountName, c.storageAccountKey)
 	if err != nil {
 		return "", err
@@ -106,12 +105,5 @@ func (c Client) GetBlobURL(blobName string, snapshot time.Time) (string, error) 
 	blobClient := client.GetBlobService()
 	cnt := blobClient.GetContainerReference(c.container)
 	blob := cnt.GetBlobReference(blobName)
-	u, err := url.Parse(blob.GetURL())
-	if err != nil {
-		return "", err
-	}
-	q := u.Query()
-	q.Set("snapshot", snapshot.UTC().Format("2006-01-02T15:04:05.9999999Z"))
-	u.RawQuery = q.Encode()
-	return u.String(), nil
+	return blob.GetURL(), nil
 }

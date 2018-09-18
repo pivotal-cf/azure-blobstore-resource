@@ -50,6 +50,16 @@ type AzureClient struct {
 			Error    error
 		}
 	}
+	GetBlobURLCall struct {
+		CallCount int
+		Receives  struct {
+			BlobName string
+		}
+		Returns struct {
+			URL   string
+			Error error
+		}
+	}
 }
 
 func (a *AzureClient) ListBlobs(params storage.ListBlobsParameters) (storage.BlobListResponse, error) {
@@ -81,4 +91,10 @@ func (a *AzureClient) CreateSnapshot(blobName string) (time.Time, error) {
 	a.CreateSnapshotCall.CallCount++
 	a.CreateSnapshotCall.Receives.BlobName = blobName
 	return a.CreateSnapshotCall.Returns.Snapshot, a.CreateSnapshotCall.Returns.Error
+}
+
+func (a *AzureClient) GetBlobURL(blobName string) (string, error) {
+	a.GetBlobURLCall.CallCount++
+	a.GetBlobURLCall.Receives.BlobName = blobName
+	return a.GetBlobURLCall.Returns.URL, a.GetBlobURLCall.Returns.Error
 }

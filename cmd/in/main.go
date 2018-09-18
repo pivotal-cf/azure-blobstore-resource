@@ -37,12 +37,17 @@ func main() {
 		log.Fatal("failed to copy blob: ", err)
 	}
 
-	url, err := azureClient.GetBlobURL(inRequest.Source.VersionedFile, inRequest.Version.Snapshot)
+	url, err := azureClient.GetBlobURL(inRequest.Source.VersionedFile)
 	if err != nil {
 		log.Fatal("failed to get blob url: ", err)
 	}
 
-	err = ioutil.WriteFile(filepath.Join(destinationDirectory, "url"), []byte(url), os.ModePerm)
+	snapshotURL, err := api.URLAppendTimeStamp(url, inRequest.Version.Snapshot)
+	if err != nil {
+		log.Fatal("failed to get blob snapshot url: ", err)
+	}
+
+	err = ioutil.WriteFile(filepath.Join(destinationDirectory, "url"), []byte(snapshotURL), os.ModePerm)
 	if err != nil {
 		log.Fatal("failed to write blob url to output directory: ", err)
 	}
@@ -58,7 +63,7 @@ func main() {
 			},
 			{
 				Name:  "url",
-				Value: url,
+				Value: snapshotURL,
 			},
 		},
 	})

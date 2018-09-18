@@ -12,4 +12,5 @@ type azureClient interface {
 	Get(blobName string, snapshot time.Time) ([]byte, error)
 	UploadFromStream(blobName string, stream io.Reader) error
 	CreateSnapshot(blobName string) (time.Time, error)
+	GetBlobURL(blobName string) (string, error)
 }

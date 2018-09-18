@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"math/rand"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -87,8 +88,11 @@ var _ = Describe("In", func() {
 			Expect(output.Metadata[0].Name).To(Equal("filename"))
 			Expect(output.Metadata[0].Value).To(Equal("example.json"))
 			Expect(output.Metadata[1].Name).To(Equal("url"))
-			Expect(output.Metadata[1].Value).To(Equal(fmt.Sprintf("https://%s.blob.core.windows.net/%s/example.json", config.StorageAccountName, container)))
-
+			url, err := url.Parse(output.Metadata[1].Value)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(url.Hostname()).To(Equal(fmt.Sprintf("%s.blob.core.windows.net", config.StorageAccountName)))
+			Expect(url.EscapedPath()).To(Equal(fmt.Sprintf("/%s/example.json", container)))
+			Expect(len(url.Query()["snapshot"][0])).To(Equal(28)) // azure is sensetive to trailing zero's
 			_, err = os.Stat(filepath.Join(tempDir, "example.json"))
 			Expect(err).NotTo(HaveOccurred())
 		})

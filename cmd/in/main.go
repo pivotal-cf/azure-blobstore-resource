@@ -3,8 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/pivotal-cf/azure-blobstore-resource/api"
 	"github.com/pivotal-cf/azure-blobstore-resource/azure"
@@ -40,6 +42,16 @@ func main() {
 		log.Fatal("failed to get blob url: ", err)
 	}
 
+	snapshotURL, err := api.URLAppendTimeStamp(url, inRequest.Version.Snapshot)
+	if err != nil {
+		log.Fatal("failed to get blob snapshot url: ", err)
+	}
+
+	err = ioutil.WriteFile(filepath.Join(destinationDirectory, "url"), []byte(snapshotURL), os.ModePerm)
+	if err != nil {
+		log.Fatal("failed to write blob url to output directory: ", err)
+	}
+
 	versionsJSON, err := json.Marshal(api.Response{
 		Version: api.ResponseVersion{
 			Snapshot: inRequest.Version.Snapshot,
@@ -51,7 +63,7 @@ func main() {
 			},
 			{
 				Name:  "url",
-				Value: url,
+				Value: snapshotURL,
 			},
 		},
 	})

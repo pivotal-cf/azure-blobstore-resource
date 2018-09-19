@@ -15,3 +15,6 @@
 
 # Configuration files
 config
+
+# Build assets
+assets

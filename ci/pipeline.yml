@@ -4,12 +4,23 @@ resource_types:
   source:
     repository: pcfabr/azure-blobstore-resource
 
+- name: pull-request
+  type: docker-image
+  source:
+    repository: jtarchie/pr
+
 resources:
 - name: azure-blobstore-resource
   type: git
   source:
     uri: https://github.com/pivotal-cf/azure-blobstore-resource.git
     branch: master
+
+- name: pull-requests
+  type: pull-request
+  source:
+    repo: pivotal-cf/azure-blobstore-resource
+    access_token: ((github_pr_access_token))
 
 - name: azure-blobstore-resource-image
   type: docker-image
@@ -49,3 +60,15 @@ jobs:
   - put: azure-blobstore-resource-image
     params:
       build: workspace
+
+- name: run-pr-tests
+  plan:
+  - aggregate:
+    - get: azure-blobstore-resource
+      resource: pull-requests
+      trigger: true
+  - task: run-tests
+    file: azure-blobstore-resource/ci/tasks/run-tests/task.yml
+    params:
+      TEST_STORAGE_ACCOUNT_NAME: ((azure_account_name))
+      TEST_STORAGE_ACCOUNT_KEY: ((azure_account_key))

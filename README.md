@@ -1,5 +1,10 @@
 # azure-blobstore-resource
-A concourse resource to interact with the azure blob service. Currently only supports versioning blobs using snapshots.
+A concourse resource to interact with the azure blob service. Currently only supports versioning
+blobs using snapshots.
+
+> NOTE: The resource has been moved from the `czero` dockerhub account to the `pcfabr` dockerhub
+> account. If your pipeline is currently using the resource from `czero` it should be switched
+> to `pcfabr`.
 
 ## Source Configuration
 
@@ -45,7 +50,7 @@ resource_types:
 - name: azure-blobstore
   type: docker-image
   source:
-    repository: czero/azure-blobstore-resource
+    repository: pcfabr/azure-blobstore-resource
 
 resources:
   - name: terraform-state

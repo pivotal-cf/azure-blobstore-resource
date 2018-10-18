@@ -1,11 +1,17 @@
 package azure
 
 import (
+	"encoding/base64"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/storage"
+)
+
+const (
+	ChunkSize = 4000000 // 4Mb
 )
 
 type Client struct {
@@ -70,7 +76,40 @@ func (c Client) UploadFromStream(blobName string, stream io.Reader) error {
 	cnt := blobClient.GetContainerReference(c.container)
 	blob := cnt.GetBlobReference(blobName)
 
-	err = blob.CreateBlockBlobFromReader(stream, nil)
+	err = blob.CreateBlockBlob(&storage.PutBlobOptions{})
+	if err != nil {
+		return err
+	}
+
+	buffer := make([]byte, ChunkSize)
+	blocks := []storage.Block{}
+	i := 0
+	for {
+		bytesRead, err := stream.Read(buffer)
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+
+			return err
+		}
+
+		chunk := buffer[:bytesRead]
+		blockID := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("BlockID{%07d}", i)))
+		err = blob.PutBlock(blockID, chunk, &storage.PutBlockOptions{})
+		if err != nil {
+			return err
+		}
+
+		blocks = append(blocks, storage.Block{
+			blockID,
+			storage.BlockStatusUncommitted,
+		})
+
+		i++
+	}
+
+	err = blob.PutBlockList(blocks, &storage.PutBlockListOptions{})
 	if err != nil {
 		return err
 	}

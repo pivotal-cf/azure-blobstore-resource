@@ -90,8 +90,7 @@ var _ = Describe("Out", func() {
 			err := os.Mkdir(filepath.Join(tempDir, "some-resource"), os.ModePerm)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = os.Link("/Users/pivotal/Downloads/bosh-stemcell-97.22-aws-xen-hvm-ubuntu-xenial-go_agent.tgz",
-				filepath.Join(tempDir, "some-resource", "stemcell.tgz"))
+			err = makeLargeFile(filepath.Join(tempDir, "some-resource", "big_file"), 200*1000*1000)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -104,13 +103,13 @@ var _ = Describe("Out", func() {
 
 			_, err = io.WriteString(stdin, fmt.Sprintf(`{
 					"params": {
-						"file": "some-resource/stemcell.tgz"
+						"file": "some-resource/big_file"
 					},
 					"source": {
 						"storage_account_name": %q,
 						"storage_account_key": %q,
 						"container": %q,
-						"versioned_file": "stemcell.tgz"
+						"versioned_file": "big_file"
 					}
 				}`,
 				config.StorageAccountName,
@@ -132,3 +131,17 @@ var _ = Describe("Out", func() {
 		})
 	})
 })
+
+func makeLargeFile(filename string, size int64) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+
+	err = file.Truncate(size)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

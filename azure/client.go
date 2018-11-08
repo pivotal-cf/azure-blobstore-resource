@@ -15,13 +15,15 @@ const (
 )
 
 type Client struct {
+	baseURL            string
 	storageAccountName string
 	storageAccountKey  string
 	container          string
 }
 
-func NewClient(storageAccountName, storageAccountKey, container string) Client {
+func NewClient(baseURL, storageAccountName, storageAccountKey, container string) Client {
 	return Client{
+		baseURL:            baseURL,
 		storageAccountName: storageAccountName,
 		storageAccountKey:  storageAccountKey,
 		container:          container,
@@ -29,7 +31,7 @@ func NewClient(storageAccountName, storageAccountKey, container string) Client {
 }
 
 func (c Client) ListBlobs(params storage.ListBlobsParameters) (storage.BlobListResponse, error) {
-	client, err := storage.NewBasicClient(c.storageAccountName, c.storageAccountKey)
+	client, err := storage.NewClient(c.storageAccountName, c.storageAccountKey, c.baseURL, storage.DefaultAPIVersion, true)
 	if err != nil {
 		return storage.BlobListResponse{}, err
 	}
@@ -41,7 +43,7 @@ func (c Client) ListBlobs(params storage.ListBlobsParameters) (storage.BlobListR
 }
 
 func (c Client) Get(blobName string, snapshot time.Time) ([]byte, error) {
-	client, err := storage.NewBasicClient(c.storageAccountName, c.storageAccountKey)
+	client, err := storage.NewClient(c.storageAccountName, c.storageAccountKey, c.baseURL, storage.DefaultAPIVersion, true)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -67,7 +69,7 @@ func (c Client) Get(blobName string, snapshot time.Time) ([]byte, error) {
 }
 
 func (c Client) UploadFromStream(blobName string, stream io.Reader) error {
-	client, err := storage.NewBasicClient(c.storageAccountName, c.storageAccountKey)
+	client, err := storage.NewClient(c.storageAccountName, c.storageAccountKey, c.baseURL, storage.DefaultAPIVersion, true)
 	if err != nil {
 		return err
 	}
@@ -118,7 +120,7 @@ func (c Client) UploadFromStream(blobName string, stream io.Reader) error {
 }
 
 func (c Client) CreateSnapshot(blobName string) (time.Time, error) {
-	client, err := storage.NewBasicClient(c.storageAccountName, c.storageAccountKey)
+	client, err := storage.NewClient(c.storageAccountName, c.storageAccountKey, c.baseURL, storage.DefaultAPIVersion, true)
 	if err != nil {
 		return time.Time{}, err
 	}
@@ -136,7 +138,7 @@ func (c Client) CreateSnapshot(blobName string) (time.Time, error) {
 }
 
 func (c Client) GetBlobURL(blobName string) (string, error) {
-	client, err := storage.NewBasicClient(c.storageAccountName, c.storageAccountKey)
+	client, err := storage.NewClient(c.storageAccountName, c.storageAccountKey, c.baseURL, storage.DefaultAPIVersion, true)
 	if err != nil {
 		return "", err
 	}

@@ -19,6 +19,9 @@ blobs using snapshots.
   resource will not find the blob. A new snapshot must also be created when a blob is
   updated for the resource to successfully check new versions.
 
+* `base_url`: *Optional.* The storage endpoint to use for the resource. Defaults to the
+  Azure Public Cloud (core.windows.net).
+
 ## Behavior
 
 ### `check`: Extract snapshot versions from the container.

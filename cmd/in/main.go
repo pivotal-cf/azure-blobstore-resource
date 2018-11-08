@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Azure/azure-sdk-for-go/storage"
 	"github.com/pivotal-cf/azure-blobstore-resource/api"
 	"github.com/pivotal-cf/azure-blobstore-resource/azure"
 )
@@ -21,7 +22,13 @@ func main() {
 		log.Fatal("failed to decode: ", err)
 	}
 
+	baseURL := storage.DefaultBaseURL
+	if inRequest.Source.BaseURL != "" {
+		baseURL = inRequest.Source.BaseURL
+	}
+
 	azureClient := azure.NewClient(
+		baseURL,
 		inRequest.Source.StorageAccountName,
 		inRequest.Source.StorageAccountKey,
 		inRequest.Source.Container,

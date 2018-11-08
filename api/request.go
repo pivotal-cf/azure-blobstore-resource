@@ -13,6 +13,7 @@ type OutRequest struct {
 }
 
 type RequestSource struct {
+	BaseURL            string `json:"base_url"`
 	StorageAccountName string `json:"storage_account_name"`
 	StorageAccountKey  string `json:"storage_account_key"`
 	Container          string `json:"container"`

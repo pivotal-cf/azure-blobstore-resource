@@ -1,6 +1,7 @@
 package api_test
 
 import (
+	"bytes"
 	"errors"
 	"io/ioutil"
 	"path/filepath"
@@ -36,17 +37,32 @@ var _ = Describe("In", func() {
 		)
 
 		BeforeEach(func() {
-			azureClient.GetCall.Returns.BlobData = []byte(`{"key": "value"}`)
+			azureClient.GetRangeCall.Returns.BlobReader = ioutil.NopCloser(bytes.NewReader([]byte(`{"key": "value"}`)))
 			snapshot = time.Date(2017, time.January, 01, 01, 01, 01, 01, time.UTC)
+
+			azureClient.GetBlobSizeInBytesCall.Returns.BlobSize = api.ChunkSize*2 + 50
 		})
 
 		It("copies blob from azure blobstore to local destination directory", func() {
 			err := in.CopyBlobToDestination(tempDir, "example.json", snapshot)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(azureClient.GetCall.CallCount).To(Equal(1))
-			Expect(azureClient.GetCall.Receives.BlobName).To(Equal("example.json"))
-			Expect(azureClient.GetCall.Receives.Snapshot).To(Equal(snapshot))
+			Expect(azureClient.GetBlobSizeInBytesCall.CallCount).To(Equal(1))
+			Expect(azureClient.GetBlobSizeInBytesCall.Receives.BlobName).To(Equal("example.json"))
+			Expect(azureClient.GetBlobSizeInBytesCall.Receives.Snapshot).To(Equal(snapshot))
+
+			Expect(azureClient.GetRangeCall.CallCount).To(Equal(3))
+			Expect(azureClient.GetRangeCall.Receives[0].BlobName).To(Equal("example.json"))
+			Expect(azureClient.GetRangeCall.Receives[0].Snapshot).To(Equal(snapshot))
+
+			Expect(azureClient.GetRangeCall.Receives[0].StartRangeInBytes).To(Equal(uint64(0)))
+			Expect(azureClient.GetRangeCall.Receives[0].EndRangeInBytes).To(Equal(uint64(api.ChunkSize - 1)))
+
+			Expect(azureClient.GetRangeCall.Receives[1].StartRangeInBytes).To(Equal(uint64(api.ChunkSize)))
+			Expect(azureClient.GetRangeCall.Receives[1].EndRangeInBytes).To(Equal(uint64(api.ChunkSize*2 - 1)))
+
+			Expect(azureClient.GetRangeCall.Receives[2].StartRangeInBytes).To(Equal(uint64(api.ChunkSize * 2)))
+			Expect(azureClient.GetRangeCall.Receives[2].EndRangeInBytes).To(Equal(uint64(api.ChunkSize*2 + 50)))
 
 			data, err := ioutil.ReadFile(filepath.Join(tempDir, "example.json"))
 			Expect(err).NotTo(HaveOccurred())
@@ -56,13 +72,13 @@ var _ = Describe("In", func() {
 		Context("when an error occurs", func() {
 			Context("when azure client fails to get a blob", func() {
 				It("returns an error", func() {
-					azureClient.GetCall.Returns.Error = errors.New("failed to get blob")
+					azureClient.GetRangeCall.Returns.Error = errors.New("failed to get blob")
 					err := in.CopyBlobToDestination(tempDir, "example.json", snapshot)
 					Expect(err).To(MatchError("failed to get blob"))
 				})
 			})
 
-			Context("when it fails to write a file into the destination dir", func() {
+			Context("when it fails to create a file into the destination dir", func() {
 				It("returns an error", func() {
 					err := in.CopyBlobToDestination("/fake/dest/dir", "example.json", snapshot)
 					Expect(err).To(MatchError("open /fake/dest/dir/example.json: no such file or directory"))

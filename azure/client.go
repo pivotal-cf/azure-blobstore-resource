@@ -42,6 +42,36 @@ func (c Client) ListBlobs(params storage.ListBlobsParameters) (storage.BlobListR
 	return cnt.ListBlobs(params)
 }
 
+func (c Client) GetBlobSizeInBytes(blobName string, snapshot time.Time) (int64, error) {
+	client, err := storage.NewClient(c.storageAccountName, c.storageAccountKey, c.baseURL, storage.DefaultAPIVersion, true)
+	if err != nil {
+		return 0, err
+	}
+
+	blobClient := client.GetBlobService()
+	cnt := blobClient.GetContainerReference(c.container)
+	blob := cnt.GetBlobReference(blobName)
+
+	exists, err := blob.Exists()
+	if err != nil {
+		return 0, err
+	}
+
+	if !exists {
+		return 0, fmt.Errorf("%q doesn't exist", blobName)
+	}
+
+	err = blob.GetProperties(&storage.GetBlobPropertiesOptions{
+		Snapshot: &snapshot,
+	})
+	if err != nil {
+		return 0, err
+	}
+
+	return blob.Properties.ContentLength, nil
+
+}
+
 func (c Client) Get(blobName string, snapshot time.Time) ([]byte, error) {
 	client, err := storage.NewClient(c.storageAccountName, c.storageAccountKey, c.baseURL, storage.DefaultAPIVersion, true)
 	if err != nil {
@@ -66,6 +96,31 @@ func (c Client) Get(blobName string, snapshot time.Time) ([]byte, error) {
 	}
 
 	return data, nil
+}
+
+func (c Client) GetRange(blobName string, startRangeInBytes, endRangeInBytes uint64, snapshot time.Time) (io.ReadCloser, error) {
+	client, err := storage.NewClient(c.storageAccountName, c.storageAccountKey, c.baseURL, storage.DefaultAPIVersion, true)
+	if err != nil {
+		return nil, err
+	}
+
+	blobClient := client.GetBlobService()
+	cnt := blobClient.GetContainerReference(c.container)
+	blob := cnt.GetBlobReference(blobName)
+	blobReader, err := blob.GetRange(&storage.GetBlobRangeOptions{
+		Range: &storage.BlobRange{
+			Start: startRangeInBytes,
+			End:   endRangeInBytes,
+		},
+		GetBlobOptions: &storage.GetBlobOptions{
+			Snapshot: &snapshot,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return blobReader, nil
 }
 
 func (c Client) UploadFromStream(blobName string, stream io.Reader) error {

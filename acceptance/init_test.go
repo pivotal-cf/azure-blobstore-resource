@@ -1,6 +1,9 @@
 package acceptance_test
 
 import (
+	"encoding/base64"
+	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -96,6 +99,57 @@ func createBlobWithSnapshot(container, blobName string) *time.Time {
 	cnt := blobClient.GetContainerReference(container)
 	blob := cnt.GetBlobReference(blobName)
 	err = blob.CreateBlockBlob(&storage.PutBlobOptions{})
+	Expect(err).NotTo(HaveOccurred())
+
+	timestamp, err := blob.CreateSnapshot(&storage.SnapshotOptions{})
+	Expect(err).NotTo(HaveOccurred())
+
+	return timestamp
+}
+
+func uploadBlobWithSnapshot(container, blobName, filename string) *time.Time {
+	client, err := storage.NewBasicClient(os.Getenv("TEST_STORAGE_ACCOUNT_NAME"), os.Getenv("TEST_STORAGE_ACCOUNT_KEY"))
+	Expect(err).NotTo(HaveOccurred())
+
+	blobClient := client.GetBlobService()
+	cnt := blobClient.GetContainerReference(container)
+	blob := cnt.GetBlobReference(blobName)
+
+	err = blob.CreateBlockBlob(&storage.PutBlobOptions{})
+	Expect(err).NotTo(HaveOccurred())
+
+	file, err := os.Open(filename)
+	Expect(err).NotTo(HaveOccurred())
+	defer file.Close()
+
+	var chunkSize = 4000000 // 4Mb
+	buffer := make([]byte, chunkSize)
+	blocks := []storage.Block{}
+	i := 0
+	for {
+		bytesRead, err := file.Read(buffer)
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+
+			Expect(err).NotTo(HaveOccurred())
+		}
+
+		chunk := buffer[:bytesRead]
+		blockID := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("BlockID{%07d}", i)))
+		err = blob.PutBlock(blockID, chunk, &storage.PutBlockOptions{})
+		Expect(err).NotTo(HaveOccurred())
+
+		blocks = append(blocks, storage.Block{
+			blockID,
+			storage.BlockStatusUncommitted,
+		})
+
+		i++
+	}
+
+	err = blob.PutBlockList(blocks, &storage.PutBlockListOptions{})
 	Expect(err).NotTo(HaveOccurred())
 
 	timestamp, err := blob.CreateSnapshot(&storage.SnapshotOptions{})

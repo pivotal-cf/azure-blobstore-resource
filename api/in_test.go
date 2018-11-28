@@ -69,6 +69,34 @@ var _ = Describe("In", func() {
 			Expect(string(data)).To(Equal(`{"key": "value"}`))
 		})
 
+		Context("when a sub directory is specified within destination", func() {
+			It("creates the sub directories", func() {
+				err := in.CopyBlobToDestination(tempDir, "./sub/dir/example.json", snapshot)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(azureClient.GetBlobSizeInBytesCall.CallCount).To(Equal(1))
+				Expect(azureClient.GetBlobSizeInBytesCall.Receives.BlobName).To(Equal("./sub/dir/example.json"))
+				Expect(azureClient.GetBlobSizeInBytesCall.Receives.Snapshot).To(Equal(snapshot))
+
+				Expect(azureClient.GetRangeCall.CallCount).To(Equal(3))
+				Expect(azureClient.GetRangeCall.Receives[0].BlobName).To(Equal("./sub/dir/example.json"))
+				Expect(azureClient.GetRangeCall.Receives[0].Snapshot).To(Equal(snapshot))
+
+				Expect(azureClient.GetRangeCall.Receives[0].StartRangeInBytes).To(Equal(uint64(0)))
+				Expect(azureClient.GetRangeCall.Receives[0].EndRangeInBytes).To(Equal(uint64(api.ChunkSize - 1)))
+
+				Expect(azureClient.GetRangeCall.Receives[1].StartRangeInBytes).To(Equal(uint64(api.ChunkSize)))
+				Expect(azureClient.GetRangeCall.Receives[1].EndRangeInBytes).To(Equal(uint64(api.ChunkSize*2 - 1)))
+
+				Expect(azureClient.GetRangeCall.Receives[2].StartRangeInBytes).To(Equal(uint64(api.ChunkSize * 2)))
+				Expect(azureClient.GetRangeCall.Receives[2].EndRangeInBytes).To(Equal(uint64(api.ChunkSize*2 + 50)))
+
+				data, err := ioutil.ReadFile(filepath.Join(tempDir, "sub", "dir", "example.json"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(data)).To(Equal(`{"key": "value"}`))
+			})
+		})
+
 		Context("when an error occurs", func() {
 			Context("when azure client fails to get a blob", func() {
 				It("returns an error", func() {
@@ -81,7 +109,7 @@ var _ = Describe("In", func() {
 			Context("when it fails to create a file into the destination dir", func() {
 				It("returns an error", func() {
 					err := in.CopyBlobToDestination("/fake/dest/dir", "example.json", snapshot)
-					Expect(err).To(MatchError("open /fake/dest/dir/example.json: no such file or directory"))
+					Expect(err).To(MatchError("mkdir /fake: permission denied"))
 				})
 			})
 		})

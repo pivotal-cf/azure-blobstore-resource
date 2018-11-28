@@ -3,6 +3,7 @@ package api
 import (
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"time"
 )
@@ -25,6 +26,14 @@ func (i In) CopyBlobToDestination(destinationDir, blobName string, snapshot time
 	blobSize, err := i.azureClient.GetBlobSizeInBytes(blobName, snapshot)
 	if err != nil {
 		return err
+	}
+
+	subDir := path.Dir(blobName)
+	if subDir != "" {
+		err := os.MkdirAll(filepath.Join(destinationDir, subDir), os.ModePerm)
+		if err != nil {
+			return err
+		}
 	}
 
 	file, err := os.Create(filepath.Join(destinationDir, blobName))

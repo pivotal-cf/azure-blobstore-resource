@@ -87,7 +87,6 @@ jobs:
   - aggregate:
     - get: azure-blobstore-resource
       resource: pull-requests
-      trigger: true
   - task: run-tests
     file: azure-blobstore-resource/ci/tasks/run-tests/task.yml
     params:

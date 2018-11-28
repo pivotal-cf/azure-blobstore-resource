@@ -4,6 +4,12 @@ resource_types:
   source:
     repository: pcfabr/azure-blobstore-resource
 
+- name: azure-blobstore-rc
+  type: docker-image
+  source:
+    repository: pcfabr/azure-blobstore-resource
+    tag: release-candidate
+
 - name: pull-request
   type: docker-image
   source:
@@ -43,6 +49,14 @@ resources:
     repository: concourse/buildroot
     tag: base
 
+- name: some-blob-on-azure-rc
+  type: azure-blobstore-rc
+  source:
+    storage_account_name: ((test_rc_storage_account_name))
+    storage_account_key: ((test_rc_storage_account_key))
+    container: ((test_rc_container))
+    versioned_file: some-file
+
 jobs:
 - name: run-tests
   plan:
@@ -69,11 +83,40 @@ jobs:
     params:
       build: workspace
 
-- name: bump-final-image
+- name: test-put-rc
   plan:
   - aggregate:
     - get: azure-blobstore-resource
       passed: [bump-rc-image]
+      trigger: true
+  - task: write-config
+    file: azure-blobstore-resource/example/tasks/write-config/task.yml
+    params:
+      CONFIGURATION_FILENAME: some-file
+  - put: some-blob-on-azure-rc
+    params:
+      file: configuration/some-file
+
+- name: test-get-rc
+  plan:
+  - aggregate:
+    - get: azure-blobstore-resource
+      passed: [test-put-rc]
+      trigger: true
+    - get: some-blob-on-azure-rc
+      passed: [test-put-rc]
+  - task: print-config
+    file: azure-blobstore-resource/example/tasks/print-config/task.yml
+    input_mapping:
+      configuration: some-blob-on-azure-rc
+    params:
+      CONFIGURATION_FILENAME: some-file
+
+- name: bump-final-image
+  plan:
+  - aggregate:
+    - get: azure-blobstore-resource
+      passed: [test-get-rc]
     - get: base-image
       trigger: true
   - task: prepare-workspace

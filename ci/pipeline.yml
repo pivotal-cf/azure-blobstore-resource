@@ -22,7 +22,15 @@ resources:
     repo: pivotal-cf/azure-blobstore-resource
     access_token: ((github_pr_access_token))
 
-- name: azure-blobstore-resource-image
+- name: azure-blobstore-resource-rc-image
+  type: docker-image
+  source:
+    repository: pcfabr/azure-blobstore-resource
+    username: ((dockerhub_username))
+    password: ((dockerhub_password))
+    tag: release-candidate
+
+- name: azure-blobstore-resource-final-image
   type: docker-image
   source:
     repository: pcfabr/azure-blobstore-resource
@@ -47,7 +55,7 @@ jobs:
       TEST_STORAGE_ACCOUNT_NAME: ((azure_account_name))
       TEST_STORAGE_ACCOUNT_KEY: ((azure_account_key))
 
-- name: bump-image
+- name: bump-rc-image
   plan:
   - aggregate:
     - get: azure-blobstore-resource
@@ -57,7 +65,20 @@ jobs:
       trigger: true
   - task: prepare-workspace
     file: azure-blobstore-resource/ci/tasks/prepare-workspace/task.yml
-  - put: azure-blobstore-resource-image
+  - put: azure-blobstore-resource-rc-image
+    params:
+      build: workspace
+
+- name: bump-final-image
+  plan:
+  - aggregate:
+    - get: azure-blobstore-resource
+      passed: [bump-rc-image]
+    - get: base-image
+      trigger: true
+  - task: prepare-workspace
+    file: azure-blobstore-resource/ci/tasks/prepare-workspace/task.yml
+  - put: azure-blobstore-resource-final-image
     params:
       build: workspace
 

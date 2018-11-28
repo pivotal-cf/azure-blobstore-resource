@@ -105,13 +105,6 @@ var _ = Describe("In", func() {
 					Expect(err).To(MatchError("failed to get blob"))
 				})
 			})
-
-			Context("when it fails to create a file into the destination dir", func() {
-				It("returns an error", func() {
-					err := in.CopyBlobToDestination("/fake/dest/dir", "example.json", snapshot)
-					Expect(err).To(MatchError("mkdir /fake: permission denied"))
-				})
-			})
 		})
 	})
 })

@@ -1,3 +1,3 @@
-FROM concourse/buildroot:base
+FROM cloudfoundry/cflinuxfs3:latest
 
 ADD assets/ /opt/resource/

@@ -46,8 +46,7 @@ resources:
 - name: base-image
   type: docker-image
   source:
-    repository: concourse/buildroot
-    tag: base
+    repository: cloudfoundry/cflinuxfs3
 
 - name: some-blob-on-azure-rc
   type: azure-blobstore-rc

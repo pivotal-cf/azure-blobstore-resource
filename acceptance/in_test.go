@@ -98,6 +98,61 @@ var _ = Describe("In", func() {
 		})
 	})
 
+	Context("when the blob doesn't have a snapshot", func() {
+		BeforeEach(func() {
+			createBlob(container, "example.json")
+		})
+
+		It("downloads the blob without using a snapshot", func() {
+			in := exec.Command(pathToIn, tempDir)
+			in.Stderr = os.Stderr
+
+			stdin, err := in.StdinPipe()
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = io.WriteString(stdin, fmt.Sprintf(`{
+					"source": {
+						"storage_account_name": %q,
+						"storage_account_key": %q,
+						"container": %q,
+						"versioned_file": "example.json"
+					}
+				}`,
+				config.StorageAccountName,
+				config.StorageAccountKey,
+				container,
+			))
+			Expect(err).NotTo(HaveOccurred())
+
+			outputJSON, err := in.Output()
+			Expect(err).NotTo(HaveOccurred())
+
+			var output struct {
+				Version struct {
+					Snapshot time.Time `json:"snapshot"`
+				} `json:"version"`
+				Metadata []struct {
+					Name  string `json:"name"`
+					Value string `json:"value"`
+				} `json:"metadata"`
+			}
+			err = json.Unmarshal(outputJSON, &output)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(output.Version.Snapshot).To(Equal(time.Time{}))
+			Expect(output.Metadata[0].Name).To(Equal("filename"))
+			Expect(output.Metadata[0].Value).To(Equal("example.json"))
+			Expect(output.Metadata[1].Name).To(Equal("url"))
+			url, err := url.Parse(output.Metadata[1].Value)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(url.Hostname()).To(Equal(fmt.Sprintf("%s.blob.core.windows.net", config.StorageAccountName)))
+			Expect(url.EscapedPath()).To(Equal(fmt.Sprintf("/%s/example.json", container)))
+			Expect(len(url.Query()["snapshot"][0])).To(Equal(28)) // azure is sensetive to trailing zero's
+			_, err = os.Stat(filepath.Join(tempDir, "example.json"))
+			Expect(err).NotTo(HaveOccurred())
+		})
+	})
+
 	Context("when the destination is in a sub directory", func() {
 		var (
 			snapshotTimestamp *time.Time

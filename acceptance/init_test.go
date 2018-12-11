@@ -107,6 +107,17 @@ func createBlobWithSnapshot(container, blobName string) *time.Time {
 	return timestamp
 }
 
+func createBlob(container, blobName string) {
+	client, err := storage.NewBasicClient(os.Getenv("TEST_STORAGE_ACCOUNT_NAME"), os.Getenv("TEST_STORAGE_ACCOUNT_KEY"))
+	Expect(err).NotTo(HaveOccurred())
+
+	blobClient := client.GetBlobService()
+	cnt := blobClient.GetContainerReference(container)
+	blob := cnt.GetBlobReference(blobName)
+	err = blob.CreateBlockBlob(&storage.PutBlobOptions{})
+	Expect(err).NotTo(HaveOccurred())
+}
+
 func uploadBlobWithSnapshot(container, blobName, filename string) *time.Time {
 	client, err := storage.NewBasicClient(os.Getenv("TEST_STORAGE_ACCOUNT_NAME"), os.Getenv("TEST_STORAGE_ACCOUNT_KEY"))
 	Expect(err).NotTo(HaveOccurred())

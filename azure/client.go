@@ -61,8 +61,13 @@ func (c Client) GetBlobSizeInBytes(blobName string, snapshot time.Time) (int64, 
 		return 0, fmt.Errorf("%q doesn't exist", blobName)
 	}
 
+	var snapshotPtr *time.Time
+	if !snapshot.IsZero() {
+		snapshotPtr = &snapshot
+	}
+
 	err = blob.GetProperties(&storage.GetBlobPropertiesOptions{
-		Snapshot: &snapshot,
+		Snapshot: snapshotPtr,
 	})
 	if err != nil {
 		return 0, err
@@ -78,11 +83,16 @@ func (c Client) Get(blobName string, snapshot time.Time) ([]byte, error) {
 		return []byte{}, err
 	}
 
+	var snapshotPtr *time.Time
+	if !snapshot.IsZero() {
+		snapshotPtr = &snapshot
+	}
+
 	blobClient := client.GetBlobService()
 	cnt := blobClient.GetContainerReference(c.container)
 	blob := cnt.GetBlobReference(blobName)
 	blobReader, err := blob.Get(&storage.GetBlobOptions{
-		Snapshot: &snapshot,
+		Snapshot: snapshotPtr,
 	})
 	if err != nil {
 		return []byte{}, err
@@ -104,6 +114,11 @@ func (c Client) GetRange(blobName string, startRangeInBytes, endRangeInBytes uin
 		return nil, err
 	}
 
+	var snapshotPtr *time.Time
+	if !snapshot.IsZero() {
+		snapshotPtr = &snapshot
+	}
+
 	blobClient := client.GetBlobService()
 	cnt := blobClient.GetContainerReference(c.container)
 	blob := cnt.GetBlobReference(blobName)
@@ -113,7 +128,7 @@ func (c Client) GetRange(blobName string, startRangeInBytes, endRangeInBytes uin
 			End:   endRangeInBytes,
 		},
 		GetBlobOptions: &storage.GetBlobOptions{
-			Snapshot: &snapshot,
+			Snapshot: snapshotPtr,
 		},
 	})
 	if err != nil {

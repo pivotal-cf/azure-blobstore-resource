@@ -1,6 +1,7 @@
 package acceptance_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -110,6 +111,39 @@ var _ = Describe("Check", func() {
 
 			Expect(len(versions)).To(Equal(1))
 			Expect(versions[0].Snapshot).To(Equal(time.Time{}))
+		})
+	})
+
+	Context("when there is no blob", func() {
+		It("returns an error", func() {
+			check := exec.Command(pathToCheck)
+			check.Stderr = os.Stderr
+
+			stdin, err := check.StdinPipe()
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = io.WriteString(stdin, fmt.Sprintf(`{
+					"source": {
+						"storage_account_name": %q,
+						"storage_account_key": %q,
+						"container": %q,
+						"versioned_file": "example.json"
+					},
+					"version": { "snapshot": "2017-08-08T23:27:16.2942812Z" }
+				}`,
+				config.StorageAccountName,
+				config.StorageAccountKey,
+				container,
+			))
+			Expect(err).NotTo(HaveOccurred())
+
+			var stderr bytes.Buffer
+			check.Stderr = &stderr
+
+			err = check.Run()
+			Expect(err).To(HaveOccurred())
+
+			Expect(stderr.String()).To(ContainSubstring("failed to find blob: example.json"))
 		})
 	})
 })

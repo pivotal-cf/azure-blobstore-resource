@@ -76,6 +76,13 @@ var _ = Describe("Check", func() {
 					})
 				})
 			})
+
+			Context("when the file is not found", func() {
+				It("returns an error", func() {
+					_, err := check.LatestVersion("non-existant.json")
+					Expect(err).To(MatchError("failed to find blob: non-existant.json"))
+				})
+			})
 		})
 	})
 })

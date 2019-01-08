@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/storage"
@@ -30,12 +31,18 @@ func (c Check) LatestVersion(filename string) (Version, error) {
 	}
 
 	var latestSnapshot time.Time
+	var found bool
 	for _, blob := range blobListResponse.Blobs {
 		if blob.Name == filename {
 			if blob.Snapshot.After(latestSnapshot) {
 				latestSnapshot = blob.Snapshot
 			}
+			found = true
 		}
+	}
+
+	if !found {
+		return Version{}, fmt.Errorf("failed to find blob: %s", filename)
 	}
 
 	return Version{

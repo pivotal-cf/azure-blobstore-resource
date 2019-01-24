@@ -18,6 +18,7 @@ type RequestSource struct {
 	StorageAccountKey  string `json:"storage_account_key"`
 	Container          string `json:"container"`
 	VersionedFile      string `json:"versioned_file"`
+	Regexp             string `json:"regexp"`
 }
 
 type InRequestVersion struct {

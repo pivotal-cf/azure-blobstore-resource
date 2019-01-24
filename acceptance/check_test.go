@@ -146,4 +146,45 @@ var _ = Describe("Check", func() {
 			Expect(stderr.String()).To(ContainSubstring("failed to find blob: example.json"))
 		})
 	})
+
+	Context("when a regex pattern is provided", func() {
+		BeforeEach(func() {
+			createBlob(container, "example-1.2.3.json")
+		})
+
+		It("returns just the latest version that matches the regexp", func() {
+			check := exec.Command(pathToCheck)
+			check.Stderr = os.Stderr
+
+			stdin, err := check.StdinPipe()
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = io.WriteString(stdin, fmt.Sprintf(`{
+					"source": {
+						"storage_account_name": %q,
+						"storage_account_key": %q,
+						"container": %q,
+						"regexp": "example-(.*).json"
+					},
+					"version": { "path": "1.0.0" }
+				}`,
+				config.StorageAccountName,
+				config.StorageAccountKey,
+				container,
+			))
+			Expect(err).NotTo(HaveOccurred())
+
+			output, err := check.Output()
+			Expect(err).NotTo(HaveOccurred())
+
+			var versions []struct {
+				Path string `json:"path"`
+			}
+			err = json.Unmarshal(output, &versions)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(len(versions)).To(Equal(1))
+			Expect(versions[0].Path).To(Equal("example-1.2.3.json"))
+		})
+	})
 })

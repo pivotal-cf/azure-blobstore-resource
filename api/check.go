@@ -2,13 +2,16 @@ package api
 
 import (
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/storage"
+	"github.com/cppforlife/go-semi-semantic/version"
 )
 
 type Version struct {
-	Snapshot time.Time `json:"snapshot"`
+	Snapshot time.Time `json:"snapshot,omitempty"`
+	Path     string    `json:"path,omitempty"`
 }
 
 type Check struct {
@@ -48,4 +51,58 @@ func (c Check) LatestVersion(filename string) (Version, error) {
 	return Version{
 		Snapshot: latestSnapshot,
 	}, nil
+}
+
+func (c Check) LatestVersionRegexp(expr string) (Version, error) {
+	blobListResponse, err := c.azureClient.ListBlobs(storage.ListBlobsParameters{})
+	if err != nil {
+		return Version{}, err
+	}
+
+	matcher, err := regexp.Compile(expr)
+	if err != nil {
+		return Version{}, err
+	}
+
+	var latestVersion version.Version
+	var latestBlobName string
+	for _, blob := range blobListResponse.Blobs {
+		var match string
+
+		matches := matcher.FindStringSubmatch(blob.Name)
+		if len(matches) < 2 {
+			continue // no match
+		}
+
+		index, found := findString(matcher.SubexpNames(), "version")
+		if found {
+			match = matches[index]
+		} else {
+			match = matches[1]
+		}
+
+		ver, err := version.NewVersionFromString(match)
+		if err != nil {
+			return Version{}, err
+		}
+
+		if ver.Compare(latestVersion) >= 0 {
+			latestVersion = ver
+			latestBlobName = blob.Name
+		}
+	}
+
+	return Version{
+		Path: latestBlobName,
+	}, nil
+}
+
+func findString(items []string, searchFor string) (int, bool) {
+	for i, item := range items {
+		if item == searchFor {
+			return i, true
+		}
+	}
+
+	return -1, false
 }

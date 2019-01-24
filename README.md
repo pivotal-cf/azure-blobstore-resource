@@ -14,13 +14,22 @@ blobs using snapshots.
 
 * `container`: *Required.* The name of the container in the storage account.
 
-* `versioned_file`: *Required.* The file name of the blob to be managed by the resource.
+* `base_url`: *Optional.* The storage endpoint to use for the resource. Defaults to the
+  Azure Public Cloud (core.windows.net).
+
+### Filenames
+
+One of the two options must be specified:
+
+* `regexp`: *Optional.* The pattern to match filenames against. At least one capture group
+  must be specified, with parentheses to extract the version. If multiple capture groups are
+  provided the first group is used by default, but if a group is named `version` that will
+  be extracted as the version. Semantic versions and numbers are supported for versioning.
+
+* `versioned_file`: *Optional.* The file name of the blob to be managed by the resource.
   The resource only pulls the latest snapshot. If the blob doesn't have a snapshot, the
   resource will not find the blob. A new snapshot must also be created when a blob is
   updated for the resource to successfully check new versions.
-
-* `base_url`: *Optional.* The storage endpoint to use for the resource. Defaults to the
-  Azure Public Cloud (core.windows.net).
 
 ## Behavior
 

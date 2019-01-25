@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/storage"
 	"github.com/pivotal-cf/azure-blobstore-resource/api"
@@ -35,42 +36,55 @@ func main() {
 	)
 	in := api.NewIn(azureClient)
 
+	var blobName, path string
+	var snapshot time.Time
+	if inRequest.Source.VersionedFile != "" {
+		blobName = inRequest.Source.VersionedFile
+		snapshot = inRequest.Version.Snapshot
+	} else if inRequest.Source.Regexp != "" {
+		blobName = inRequest.Version.Path
+		path = inRequest.Version.Path
+	}
+
 	err = in.CopyBlobToDestination(
 		destinationDirectory,
-		inRequest.Source.VersionedFile,
-		inRequest.Version.Snapshot,
+		blobName,
+		snapshot,
 	)
 	if err != nil {
 		log.Fatal("failed to copy blob: ", err)
 	}
 
-	url, err := azureClient.GetBlobURL(inRequest.Source.VersionedFile)
+	url, err := azureClient.GetBlobURL(blobName)
 	if err != nil {
 		log.Fatal("failed to get blob url: ", err)
 	}
 
-	snapshotURL, err := api.URLAppendTimeStamp(url, inRequest.Version.Snapshot)
-	if err != nil {
-		log.Fatal("failed to get blob snapshot url: ", err)
+	if inRequest.Source.VersionedFile != "" {
+		url, err = api.URLAppendTimeStamp(url, inRequest.Version.Snapshot)
+		if err != nil {
+			log.Fatal("failed to get blob snapshot url: ", err)
+		}
 	}
 
-	err = ioutil.WriteFile(filepath.Join(destinationDirectory, "url"), []byte(snapshotURL), os.ModePerm)
+	err = ioutil.WriteFile(filepath.Join(destinationDirectory, "url"), []byte(url), os.ModePerm)
 	if err != nil {
 		log.Fatal("failed to write blob url to output directory: ", err)
 	}
 
 	versionsJSON, err := json.Marshal(api.Response{
 		Version: api.ResponseVersion{
-			Snapshot: inRequest.Version.Snapshot,
+			Snapshot: snapshot,
+			Path:     path,
 		},
 		Metadata: []api.ResponseMetadata{
 			{
 				Name:  "filename",
-				Value: inRequest.Source.VersionedFile,
+				Value: blobName,
 			},
 			{
 				Name:  "url",
-				Value: snapshotURL,
+				Value: url,
 			},
 		},
 	})

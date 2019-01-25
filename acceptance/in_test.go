@@ -273,4 +273,59 @@ var _ = Describe("In", func() {
 			Expect(fileInfo.Size()).To(Equal(fileSize))
 		})
 	})
+
+	Context("when a regex pattern is provided", func() {
+		BeforeEach(func() {
+			createBlob(container, "example-1.2.3.json")
+		})
+
+		It("downloads the specific blob version and copies it to destination directory", func() {
+			in := exec.Command(pathToIn, tempDir)
+			in.Stderr = os.Stderr
+
+			stdin, err := in.StdinPipe()
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = io.WriteString(stdin, fmt.Sprintf(`{
+					"source": {
+						"storage_account_name": %q,
+						"storage_account_key": %q,
+						"container": %q,
+						"regexp": "example-(.*).json"
+					},
+					"version": { "path": "example-1.2.3.json" }
+				}`,
+				config.StorageAccountName,
+				config.StorageAccountKey,
+				container,
+			))
+			Expect(err).NotTo(HaveOccurred())
+
+			outputJSON, err := in.Output()
+			Expect(err).NotTo(HaveOccurred())
+
+			var output struct {
+				Version struct {
+					Path string `json:"path"`
+				} `json:"version"`
+				Metadata []struct {
+					Name  string `json:"name"`
+					Value string `json:"value"`
+				} `json:"metadata"`
+			}
+			err = json.Unmarshal(outputJSON, &output)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(output.Version.Path).To(Equal("example-1.2.3.json"))
+			Expect(output.Metadata[0].Name).To(Equal("filename"))
+			Expect(output.Metadata[0].Value).To(Equal("example-1.2.3.json"))
+			Expect(output.Metadata[1].Name).To(Equal("url"))
+			url, err := url.Parse(output.Metadata[1].Value)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(url.Hostname()).To(Equal(fmt.Sprintf("%s.blob.core.windows.net", config.StorageAccountName)))
+			Expect(url.EscapedPath()).To(Equal(fmt.Sprintf("/%s/example-1.2.3.json", container)))
+			_, err = os.Stat(filepath.Join(tempDir, "example-1.2.3.json"))
+			Expect(err).NotTo(HaveOccurred())
+		})
+	})
 })

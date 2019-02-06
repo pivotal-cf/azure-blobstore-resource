@@ -45,11 +45,16 @@ Places the blob file in the destination.
 ### `out`: Upload a blob to the container.
 
 Uploads a file to the container. After uploading the blob it will create a
-new snapshot of the blob.
+new snapshot of the blob. If `regexp` is specified, the new file will be uploaded
+to the directory that the regex searches in. If `versioned_file` is specified, the
+new file will be uploaded as a new version of that file.
 
 #### Parameters
 
-* `file`: *Required.* Path to the file to upload, provided by an output of a task.
+* `file`: *Required.* Path to the file to upload, provided by an output of a task. If multiple
+  files are matched by the glob, an error is raised. The file that matches the glob will be
+  uploaded into the directory specified by the regexp. Only supports bash glob expansion, not
+  regex.
 
 ## Example Configuration
 

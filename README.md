@@ -117,5 +117,5 @@ and with regexp:
 ```yaml
 - put: my-release
   params:
-    file: release-*.tgz
+    file: my-release/release-*.tgz
 ```

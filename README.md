@@ -62,7 +62,9 @@ An example pipeline exists in the `example` directory.
 
 ### Resource
 
-```
+When using Azure snapshots:
+
+```yaml
 resource_types:
 - name: azure-blobstore
   type: docker-image
@@ -79,14 +81,41 @@ resources:
       versioned_file: terraform.tfstate
 ```
 
+or with regexp:
+
+```yaml
+resource_types:
+- name: azure-blobstore
+  type: docker-image
+  source:
+    repository: pcfabr/azure-blobstore-resource
+
+resources:
+  - name: my-release
+    type: azure-blobstore
+    source:
+      storage_account_name: {{storage_account_name}}
+      storage_account_key: {{storage_account_key}}
+      container: {{container}}
+      regexp: release-(.*).tgz
+```
+
 ### Plan
 
-```
+```yaml
 - get: terraform-state
 ```
 
-```
+```yaml
 - put: terraform-state
   params:
     file: terraform-state/terraform.tfstate
+```
+
+and with regexp:
+
+```yaml
+- put: my-release
+  params:
+    file: terraform-state/release-*.tgz
 ```

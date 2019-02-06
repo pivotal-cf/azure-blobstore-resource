@@ -117,5 +117,5 @@ and with regexp:
 ```yaml
 - put: my-release
   params:
-    file: terraform-state/release-*.tgz
+    file: release-*.tgz
 ```

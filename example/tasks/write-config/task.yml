@@ -14,6 +14,7 @@ outputs:
 
 params:
   CONFIGURATION_FILENAME:
+  APPEND_TIMESTAMP_ON_FILENAME:
 
 run:
   path: azure-blobstore-resource/example/tasks/write-config/task.sh

@@ -1,6 +1,5 @@
 # azure-blobstore-resource
-A concourse resource to interact with the azure blob service. Currently only supports versioning
-blobs using snapshots.
+A concourse resource to interact with the azure blob service.
 
 > NOTE: The resource has been moved from the `czero` dockerhub account to the `pcfabr` dockerhub
 > account. If your pipeline is currently using the resource from `czero` it should be switched

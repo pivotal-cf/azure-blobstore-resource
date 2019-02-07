@@ -48,13 +48,21 @@ resources:
   source:
     repository: cloudfoundry/cflinuxfs3
 
-- name: some-blob-on-azure-rc
+- name: a-versioned-blob
   type: azure-blobstore-rc
   source:
     storage_account_name: ((test_rc_storage_account_name))
     storage_account_key: ((test_rc_storage_account_key))
     container: ((test_rc_container))
     versioned_file: some-file
+
+- name: a-regexp-blob
+  type: azure-blobstore-rc
+  source:
+    storage_account_name: ((test_rc_storage_account_name))
+    storage_account_key: ((test_rc_storage_account_key))
+    container: ((test_rc_container))
+    regexp: some-file-(.*)
 
 jobs:
 - name: run-tests
@@ -82,7 +90,7 @@ jobs:
     params:
       build: workspace
 
-- name: test-put-rc
+- name: test-versioning-put-rc
   plan:
   - aggregate:
     - get: azure-blobstore-resource
@@ -92,30 +100,61 @@ jobs:
     file: azure-blobstore-resource/example/tasks/write-config/task.yml
     params:
       CONFIGURATION_FILENAME: some-file
-  - put: some-blob-on-azure-rc
+  - put: a-versioned-blob
     params:
       file: configuration/some-file
 
-- name: test-get-rc
+- name: test-versioning-get-rc
   plan:
   - aggregate:
     - get: azure-blobstore-resource
-      passed: [test-put-rc]
+      passed: [test-versioning-put-rc]
       trigger: true
-    - get: some-blob-on-azure-rc
-      passed: [test-put-rc]
+    - get: a-versioned-blob
+      passed: [test-versioning-put-rc]
   - task: print-config
     file: azure-blobstore-resource/example/tasks/print-config/task.yml
     input_mapping:
-      configuration: some-blob-on-azure-rc
+      configuration: a-versioned-blob
     params:
       CONFIGURATION_FILENAME: some-file
+
+- name: test-regexp-put-rc
+  plan:
+  - aggregate:
+    - get: azure-blobstore-resource
+      passed: [bump-rc-image]
+      trigger: true
+  - task: write-config
+    file: azure-blobstore-resource/example/tasks/write-config/task.yml
+    params:
+      CONFIGURATION_FILENAME: some-file
+      APPEND_TIMESTAMP_ON_FILENAME: 1
+  - put: a-regexp-blob
+    params:
+      file: configuration/some-file-*
+
+- name: test-regexp-get-rc
+  plan:
+  - aggregate:
+    - get: azure-blobstore-resource
+      passed: [test-regexp-put-rc]
+      trigger: true
+    - get: a-regexp-blob
+      passed: [test-regexp-put-rc]
+  - task: print-config
+    file: azure-blobstore-resource/example/tasks/print-config/task.yml
+    input_mapping:
+      configuration: a-regexp-blob
+    params:
+      CONFIGURATION_FILENAME: some-file-*
+
 
 - name: bump-final-image
   plan:
   - aggregate:
     - get: azure-blobstore-resource
-      passed: [test-get-rc]
+      passed: [test-versioning-get-rc, test-regexp-get-rc]
     - get: base-image
       trigger: true
   - task: prepare-workspace

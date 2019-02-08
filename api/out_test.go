@@ -79,17 +79,17 @@ var _ = Describe("Out", func() {
 					return nil
 				}
 
-				path, snapshot, err := out.UploadFileToBlobstore(tempDir, "example.json", "example.json", true)
+				path, snapshot, err := out.UploadFileToBlobstore(tempDir, "example.json", "some-blob", true)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(azureClient.UploadFromStreamCall.CallCount).To(Equal(1))
-				Expect(azureClient.UploadFromStreamCall.Receives.BlobName).To(Equal("example.json"))
+				Expect(azureClient.UploadFromStreamCall.Receives.BlobName).To(Equal("some-blob"))
 				Expect(string(expectedStreamData)).To(Equal("some-data"))
 
 				Expect(azureClient.CreateSnapshotCall.CallCount).To(Equal(1))
-				Expect(azureClient.CreateSnapshotCall.Receives.BlobName).To(Equal("example.json"))
+				Expect(azureClient.CreateSnapshotCall.Receives.BlobName).To(Equal("some-blob"))
 
-				Expect(path).To(Equal("example.json"))
+				Expect(path).To(Equal("some-blob"))
 				Expect(snapshot).To(Equal(expectedSnapshot))
 			})
 		})

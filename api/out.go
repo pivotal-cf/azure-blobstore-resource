@@ -29,7 +29,9 @@ func (o Out) UploadFileToBlobstore(sourceDirectory string, filename string, blob
 		fileToUpload = filepath.Join(sourceDirectory, filename)
 	} else if len(matches) == 1 {
 		fileToUpload = matches[0]
-		blobName = filepath.Join(filepath.Dir(blobName), filepath.Base(fileToUpload))
+		if !createSnapshot {
+			blobName = filepath.Join(filepath.Dir(blobName), filepath.Base(fileToUpload))
+		}
 	} else {
 		return "", time.Time{}, fmt.Errorf("multiple files match glob: %s", filename)
 	}

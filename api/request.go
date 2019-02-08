@@ -5,6 +5,7 @@ import "time"
 type InRequest struct {
 	Source  RequestSource    `json:"source"`
 	Version InRequestVersion `json:"version"`
+	Params  InParams         `json:"params"`
 }
 
 type OutRequest struct {
@@ -24,6 +25,10 @@ type RequestSource struct {
 type InRequestVersion struct {
 	Snapshot time.Time `json:"snapshot,omitempty"`
 	Path     string    `json:"path,omitempty"`
+}
+
+type InParams struct {
+	Unpack bool `json:"unpack"`
 }
 
 type OutParams struct {

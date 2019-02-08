@@ -12,6 +12,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"os"
 )
 
 var _ = Describe("In", func() {
@@ -105,6 +106,23 @@ var _ = Describe("In", func() {
 					Expect(err).To(MatchError("failed to get blob"))
 				})
 			})
+		})
+	})
+
+	Describe("UnpackBlob", func() {
+		It("unpacks the blob successfully", func() {
+			tarballName := filepath.Join("fixtures", "example.tgz")
+
+			err := in.UnpackBlob(tarballName, tempDir)
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = os.Stat(filepath.Join(tempDir, "example", "foo.txt"))
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("returns an error when un-tar fails", func() {
+			err := in.UnpackBlob("does-not-exist.tgz", tempDir)
+			Expect(err).To(MatchError(ContainSubstring("tar: Error opening archive: Failed to open 'does-not-exist.tgz'")))
 		})
 	})
 })

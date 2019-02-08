@@ -6,6 +6,9 @@ import (
 	"path"
 	"path/filepath"
 	"time"
+	"os/exec"
+	"bytes"
+	"errors"
 )
 
 const (
@@ -60,6 +63,20 @@ func (i In) CopyBlobToDestination(destinationDir, blobName string, snapshot time
 
 		start = min(start+ChunkSize, uint64(blobSize))
 		end = min(end+ChunkSize, uint64(blobSize))
+	}
+
+	return nil
+}
+
+func (i In) UnpackBlob (tarballName string, destinationDirectory string) error {
+	cmd := exec.Command("tar", "-xvf", tarballName, "-C", destinationDirectory)
+
+	var out bytes.Buffer
+	cmd.Stderr = &out
+	err := cmd.Run()
+
+	if err != nil {
+		return errors.New(out.String())
 	}
 
 	return nil

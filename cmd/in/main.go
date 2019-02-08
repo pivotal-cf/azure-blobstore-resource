@@ -36,14 +36,14 @@ func main() {
 	)
 	in := api.NewIn(azureClient)
 
-	var blobName, path string
+	var blobName, versionPath string
 	var snapshot time.Time
 	if inRequest.Source.VersionedFile != "" {
 		blobName = inRequest.Source.VersionedFile
 		snapshot = inRequest.Version.Snapshot
 	} else if inRequest.Source.Regexp != "" {
 		blobName = inRequest.Version.Path
-		path = inRequest.Version.Path
+		versionPath = inRequest.Version.Path
 	}
 
 	err = in.CopyBlobToDestination(
@@ -53,6 +53,15 @@ func main() {
 	)
 	if err != nil {
 		log.Fatal("failed to copy blob: ", err)
+	}
+
+	tarballName := filepath.Join(destinationDirectory, blobName)
+
+	if inRequest.Params.Unpack {
+		err = in.UnpackBlob(tarballName, destinationDirectory)
+		if err != nil {
+			log.Fatal("failed to unpack blob: ", err)
+		}
 	}
 
 	url, err := azureClient.GetBlobURL(blobName)
@@ -75,7 +84,7 @@ func main() {
 	versionsJSON, err := json.Marshal(api.Response{
 		Version: api.ResponseVersion{
 			Snapshot: snapshot,
-			Path:     path,
+			Path:     versionPath,
 		},
 		Metadata: []api.ResponseMetadata{
 			{

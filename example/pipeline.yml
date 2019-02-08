@@ -17,7 +17,7 @@ resources:
       storage_account_name: ((storage_account_name))
       storage_account_key: ((storage_account_key))
       container: ((container))
-      versioned_file: example.json
+      versioned_file: my-file
 
 jobs:
 - name: print-config
@@ -28,7 +28,7 @@ jobs:
   - task: print-config
     file: azure-blobstore-resource/example/tasks/print-config/task.yml
     params:
-      CONFIGURATION_FILENAME: example.json
+      CONFIGURATION_FILENAME: my-file
 
 - name: write-config
   plan:
@@ -37,7 +37,7 @@ jobs:
   - task: write-config
     file: azure-blobstore-resource/example/tasks/write-config/task.yml
     params:
-      CONFIGURATION_FILENAME: example.json
+      CONFIGURATION_FILENAME: my-file
   - put: configuration
     params:
-      file: configuration/example.json
+      file: configuration/my-file

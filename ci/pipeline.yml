@@ -54,7 +54,7 @@ resources:
     storage_account_name: ((test_rc_storage_account_name))
     storage_account_key: ((test_rc_storage_account_key))
     container: ((test_rc_container))
-    versioned_file: some-file
+    versioned_file: some-versioned-blob
 
 - name: a-regexp-blob
   type: azure-blobstore-rc
@@ -117,7 +117,7 @@ jobs:
     input_mapping:
       configuration: a-versioned-blob
     params:
-      CONFIGURATION_FILENAME: some-file
+      CONFIGURATION_FILENAME: some-versioned-blob
 
 - name: test-regexp-put-rc
   plan:

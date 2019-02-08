@@ -41,6 +41,11 @@ the file will not be found.
 
 Places the blob file in the destination.
 
+#### Parameters
+
+* `unpack`: *Optional.* If true, the blob will be unpacked before running the task. Only
+  supports `.tar` files.
+
 ### `out`: Upload a blob to the container.
 
 Uploads a file to the container. After uploading the blob it will create a

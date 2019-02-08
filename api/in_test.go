@@ -10,9 +10,10 @@ import (
 	"github.com/pivotal-cf/azure-blobstore-resource/api"
 	"github.com/pivotal-cf/azure-blobstore-resource/fakes"
 
+	"os"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"os"
 )
 
 var _ = Describe("In", func() {
@@ -122,7 +123,10 @@ var _ = Describe("In", func() {
 
 		It("returns an error when un-tar fails", func() {
 			err := in.UnpackBlob("does-not-exist.tgz", tempDir)
-			Expect(err).To(MatchError(ContainSubstring("tar: Error opening archive: Failed to open 'does-not-exist.tgz'")))
+			Expect(err).To(MatchError(Or(
+				ContainSubstring("tar: Error opening archive: Failed to open 'does-not-exist.tgz'"),
+				ContainSubstring("tar: does-not-exist.tgz: Cannot open: No such file or directory\ntar: Error is not recoverable: exiting now\n"),
+			)))
 		})
 	})
 })

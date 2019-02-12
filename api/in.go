@@ -69,15 +69,17 @@ func (i In) CopyBlobToDestination(destinationDir, blobName string, snapshot time
 	return nil
 }
 
-func (i In) UnpackBlob(filename string, destinationDirectory string) error {
+func (i In) UnpackBlob(filename string) error {
 	fileExtension := filepath.Ext(filename)
 	var cmd *exec.Cmd
 
 	switch fileExtension {
+	case ".gz":
+		cmd = exec.Command("gzip", "-d", filename)
 	case ".tgz":
-		cmd = exec.Command("tar", "-xvf", filename, "-C", destinationDirectory)
+		cmd = exec.Command("tar", "-xvf", filename, "-C", filepath.Dir(filename))
 	case ".zip":
-		cmd = exec.Command("unzip", filename, "-d", destinationDirectory)
+		cmd = exec.Command("unzip", filename, "-d", filepath.Dir(filename))
 	default:
 		return fmt.Errorf("invalid extension: %s", filename)
 	}

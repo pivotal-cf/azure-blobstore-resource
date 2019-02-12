@@ -126,6 +126,49 @@ var _ = Describe("In", func() {
 				Expect(string(body)).To(ContainSubstring("gopher"))
 			})
 		})
+
+		Context("when the blob is a gz file", func() {
+			BeforeEach(func() {
+				snapshotTimestamp = uploadBlobWithSnapshot(container, "foo.txt.gz", filepath.Join("fixtures", "foo.txt.gz"))
+			})
+
+			It("un-gzips the blob onto the filesystem", func() {
+				in := exec.Command(pathToIn, tempDir)
+				in.Stderr = os.Stderr
+
+				stdin, err := in.StdinPipe()
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = io.WriteString(stdin, fmt.Sprintf(`{
+							"source": {
+								"storage_account_name": %q,
+								"storage_account_key": %q,
+								"container": %q,
+								"versioned_file": "foo.txt.gz"
+							},
+							"params": {
+								"unpack": true
+							},
+							"version": { "snapshot": %q }
+						}`,
+					config.StorageAccountName,
+					config.StorageAccountKey,
+					container,
+					snapshotTimestamp.Format(time.RFC3339Nano),
+				))
+				Expect(err).NotTo(HaveOccurred())
+
+				err = in.Run()
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = os.Stat(filepath.Join(tempDir, "foo.txt"))
+				Expect(err).NotTo(HaveOccurred())
+
+				body, err := ioutil.ReadFile(filepath.Join(tempDir, "foo.txt"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(body)).To(ContainSubstring("gopher"))
+			})
+		})
 	})
 
 	Context("when given a specific snapshot version and destination directory", func() {

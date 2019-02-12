@@ -55,10 +55,8 @@ func main() {
 		log.Fatal("failed to copy blob: ", err)
 	}
 
-	tarballName := filepath.Join(destinationDirectory, blobName)
-
 	if inRequest.Params.Unpack {
-		err = in.UnpackBlob(tarballName, destinationDirectory)
+		err = in.UnpackBlob(filepath.Join(destinationDirectory, blobName))
 		if err != nil {
 			log.Fatal("failed to unpack blob: ", err)
 		}

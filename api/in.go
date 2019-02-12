@@ -1,14 +1,15 @@
 package api
 
 import (
+	"bytes"
+	"errors"
+	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"time"
-	"os/exec"
-	"bytes"
-	"errors"
 )
 
 const (
@@ -68,8 +69,18 @@ func (i In) CopyBlobToDestination(destinationDir, blobName string, snapshot time
 	return nil
 }
 
-func (i In) UnpackBlob (tarballName string, destinationDirectory string) error {
-	cmd := exec.Command("tar", "-xvf", tarballName, "-C", destinationDirectory)
+func (i In) UnpackBlob(filename string, destinationDirectory string) error {
+	fileExtension := filepath.Ext(filename)
+	var cmd *exec.Cmd
+
+	switch fileExtension {
+	case ".tgz":
+		cmd = exec.Command("tar", "-xvf", filename, "-C", destinationDirectory)
+	case ".zip":
+		cmd = exec.Command("unzip", filename, "-d", destinationDirectory)
+	default:
+		return fmt.Errorf("invalid extension: %s", filename)
+	}
 
 	var out bytes.Buffer
 	cmd.Stderr = &out

@@ -3,6 +3,7 @@ package api_test
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"time"
@@ -111,14 +112,42 @@ var _ = Describe("In", func() {
 	})
 
 	Describe("UnpackBlob", func() {
-		It("unpacks the blob successfully", func() {
-			tarballName := filepath.Join("fixtures", "example.tgz")
+		Context("when the blob is a tarball", func() {
+			It("unpacks the blob successfully", func() {
+				tarballName := filepath.Join("fixtures", "example.tgz")
 
-			err := in.UnpackBlob(tarballName, tempDir)
-			Expect(err).NotTo(HaveOccurred())
+				err := in.UnpackBlob(tarballName, tempDir)
+				Expect(err).NotTo(HaveOccurred())
 
-			_, err = os.Stat(filepath.Join(tempDir, "example", "foo.txt"))
-			Expect(err).NotTo(HaveOccurred())
+				_, err = os.Stat(filepath.Join(tempDir, "example", "foo.txt"))
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
+
+		Context("when the blob is a zip file", func() {
+			It("unpacks the blob successfully", func() {
+				zipFilename := filepath.Join("fixtures", "example.zip")
+
+				err := in.UnpackBlob(zipFilename, tempDir)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = os.Stat(filepath.Join(tempDir, "example", "foo.txt"))
+				Expect(err).NotTo(HaveOccurred())
+
+				body, err := ioutil.ReadFile(filepath.Join(tempDir, "example", "foo.txt"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(body)).To(ContainSubstring("gopher"))
+			})
+		})
+
+		Context("when an invalid extension is provided", func() {
+			It("returns an error", func() {
+				zipFilename := filepath.Join("fixtures", "example.txt")
+
+				err := in.UnpackBlob(zipFilename, tempDir)
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(MatchError(fmt.Sprintf("invalid extension: %s", zipFilename)))
+			})
 		})
 
 		It("returns an error when un-tar fails", func() {

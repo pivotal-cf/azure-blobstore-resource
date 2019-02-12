@@ -41,45 +41,90 @@ var _ = Describe("In", func() {
 			snapshotTimestamp *time.Time
 		)
 
-		BeforeEach(func() {
-			snapshotTimestamp = uploadBlobWithSnapshot(container, "example.tgz", filepath.Join("fixtures", "example.tgz"))
+		Context("when the blob is a tarball", func() {
+			BeforeEach(func() {
+				snapshotTimestamp = uploadBlobWithSnapshot(container, "example.tgz", filepath.Join("fixtures", "example.tgz"))
+			})
+
+			It("un-tars the blob onto the filesystem", func() {
+				in := exec.Command(pathToIn, tempDir)
+				in.Stderr = os.Stderr
+
+				stdin, err := in.StdinPipe()
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = io.WriteString(stdin, fmt.Sprintf(`{
+						"source": {
+							"storage_account_name": %q,
+							"storage_account_key": %q,
+							"container": %q,
+							"versioned_file": "example.tgz"
+						},
+						"params": {
+							"unpack": true
+						},
+						"version": { "snapshot": %q }
+					}`,
+					config.StorageAccountName,
+					config.StorageAccountKey,
+					container,
+					snapshotTimestamp.Format(time.RFC3339Nano),
+				))
+				Expect(err).NotTo(HaveOccurred())
+
+				err = in.Run()
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = os.Stat(filepath.Join(tempDir, "example", "foo.txt"))
+				Expect(err).NotTo(HaveOccurred())
+
+				body, err := ioutil.ReadFile(filepath.Join(tempDir, "example", "foo.txt"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(body)).To(ContainSubstring("Hello from inside this tarball!"))
+			})
 		})
 
-		It("un-tars the blob onto the filesystem", func() {
-			in := exec.Command(pathToIn, tempDir)
-			in.Stderr = os.Stderr
+		Context("when the blob is a zip file", func() {
+			BeforeEach(func() {
+				snapshotTimestamp = uploadBlobWithSnapshot(container, "example.zip", filepath.Join("fixtures", "example.zip"))
+			})
 
-			stdin, err := in.StdinPipe()
-			Expect(err).NotTo(HaveOccurred())
+			It("un-zips the blob onto the filesystem", func() {
+				in := exec.Command(pathToIn, tempDir)
+				in.Stderr = os.Stderr
 
-			_, err = io.WriteString(stdin, fmt.Sprintf(`{
-					"source": {
-						"storage_account_name": %q,
-						"storage_account_key": %q,
-						"container": %q,
-						"versioned_file": "example.tgz"
-					},
-					"params": {
-						"unpack": true
-					},
-					"version": { "snapshot": %q }
-				}`,
-				config.StorageAccountName,
-				config.StorageAccountKey,
-				container,
-				snapshotTimestamp.Format(time.RFC3339Nano),
-			))
-			Expect(err).NotTo(HaveOccurred())
+				stdin, err := in.StdinPipe()
+				Expect(err).NotTo(HaveOccurred())
 
-			err = in.Run()
-			Expect(err).NotTo(HaveOccurred())
+				_, err = io.WriteString(stdin, fmt.Sprintf(`{
+							"source": {
+								"storage_account_name": %q,
+								"storage_account_key": %q,
+								"container": %q,
+								"versioned_file": "example.zip"
+							},
+							"params": {
+								"unpack": true
+							},
+							"version": { "snapshot": %q }
+						}`,
+					config.StorageAccountName,
+					config.StorageAccountKey,
+					container,
+					snapshotTimestamp.Format(time.RFC3339Nano),
+				))
+				Expect(err).NotTo(HaveOccurred())
 
-			_, err = os.Stat(filepath.Join(tempDir, "example", "foo.txt"))
-			Expect(err).NotTo(HaveOccurred())
+				err = in.Run()
+				Expect(err).NotTo(HaveOccurred())
 
-			body, err := ioutil.ReadFile(filepath.Join(tempDir, "example", "foo.txt"))
-			Expect(err).NotTo(HaveOccurred())
-			Expect(string(body)).To(ContainSubstring("Hello from inside this tarball!"))
+				_, err = os.Stat(filepath.Join(tempDir, "example", "foo.txt"))
+				Expect(err).NotTo(HaveOccurred())
+
+				body, err := ioutil.ReadFile(filepath.Join(tempDir, "example", "foo.txt"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(body)).To(ContainSubstring("gopher"))
+			})
 		})
 	})
 

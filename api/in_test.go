@@ -124,6 +124,9 @@ var _ = Describe("In", func() {
 			_, err = os.Stat(filepath.Join(tempDir, innerFilename))
 			Expect(err).NotTo(HaveOccurred())
 
+			_, err = os.Stat(filepath.Join(tempDir, fixtureFilename))
+			Expect(err.Error()).To(ContainSubstring("no such file or directory"))
+
 			body, err := ioutil.ReadFile(filepath.Join(tempDir, innerFilename))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(body)).To(ContainSubstring(innerFileContents))
@@ -131,7 +134,7 @@ var _ = Describe("In", func() {
 			Entry("when the blob is a tarball", "example.tgz", filepath.Join("example", "foo.txt"), "gopher"),
 			Entry("when the blob is a zip", "example.zip", filepath.Join("example", "foo.txt"), "gopher"),
 			Entry("when the blob is a gz", "foo.txt.gz", "foo.txt", "gopher"),
-			Entry("when the blob is a tarball, but doesn't have tgz extension", "example.mytype", filepath.Join("example", "foo.txt"), "gopher"),
+			Entry("when the blob is an archive, but doesn't have a normal extension", "example.mytype", filepath.Join("example", "foo.txt"), "gopher"),
 		)
 
 		Context("when an invalid extension is provided", func() {

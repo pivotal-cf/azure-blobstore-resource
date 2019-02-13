@@ -84,16 +84,18 @@ func (i In) UnpackBlob(filename string) error {
 		cmd = exec.Command("gzip", "-d", filename)
 	case "application/x-tar":
 		cmd = exec.Command("tar", "-xvf", filename, "-C", filepath.Dir(filename))
+		defer os.Remove(filename)
 	case "application/zip":
 		cmd = exec.Command("unzip", filename, "-d", filepath.Dir(filename))
+		defer os.Remove(filename)
 	default:
 		return fmt.Errorf("invalid extension: %s", filename)
 	}
 
 	var out bytes.Buffer
 	cmd.Stderr = &out
-	err = cmd.Run()
 
+	err = cmd.Run()
 	if err != nil {
 		return errors.New(out.String())
 	}

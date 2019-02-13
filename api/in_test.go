@@ -15,6 +15,7 @@ import (
 	"os"
 
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
@@ -113,52 +114,25 @@ var _ = Describe("In", func() {
 	})
 
 	Describe("UnpackBlob", func() {
-		Context("when the blob is a tarball", func() {
-			It("unpacks the blob successfully", func() {
-				err := copyFile(filepath.Join("fixtures", "example.tgz"), filepath.Join(tempDir, "example.tgz"))
-				Expect(err).NotTo(HaveOccurred())
+		DescribeTable("unpacks the blob successfully", func(fixtureFilename, innerFilename, innerFileContents string) {
+			err := copyFile(filepath.Join("fixtures", fixtureFilename), filepath.Join(tempDir, fixtureFilename))
+			Expect(err).NotTo(HaveOccurred())
 
-				err = in.UnpackBlob(filepath.Join(tempDir, "example.tgz"))
-				Expect(err).NotTo(HaveOccurred())
+			err = in.UnpackBlob(filepath.Join(tempDir, fixtureFilename))
+			Expect(err).NotTo(HaveOccurred())
 
-				_, err = os.Stat(filepath.Join(tempDir, "example", "foo.txt"))
-				Expect(err).NotTo(HaveOccurred())
-			})
-		})
+			_, err = os.Stat(filepath.Join(tempDir, innerFilename))
+			Expect(err).NotTo(HaveOccurred())
 
-		Context("when the blob is a zip file", func() {
-			It("unpacks the blob successfully", func() {
-				err := copyFile(filepath.Join("fixtures", "example.zip"), filepath.Join(tempDir, "example.zip"))
-				Expect(err).NotTo(HaveOccurred())
-
-				err = in.UnpackBlob(filepath.Join(tempDir, "example.zip"))
-				Expect(err).NotTo(HaveOccurred())
-
-				_, err = os.Stat(filepath.Join(tempDir, "example", "foo.txt"))
-				Expect(err).NotTo(HaveOccurred())
-
-				body, err := ioutil.ReadFile(filepath.Join(tempDir, "example", "foo.txt"))
-				Expect(err).NotTo(HaveOccurred())
-				Expect(string(body)).To(ContainSubstring("gopher"))
-			})
-		})
-
-		Context("when the blob is a gzip file", func() {
-			It("unpacks the blob successfully", func() {
-				err := copyFile(filepath.Join("fixtures", "foo.txt.gz"), filepath.Join(tempDir, "foo.txt.gz"))
-				Expect(err).NotTo(HaveOccurred())
-
-				err = in.UnpackBlob(filepath.Join(tempDir, "foo.txt.gz"))
-				Expect(err).NotTo(HaveOccurred())
-
-				_, err = os.Stat(filepath.Join(tempDir, "foo.txt"))
-				Expect(err).NotTo(HaveOccurred())
-
-				body, err := ioutil.ReadFile(filepath.Join(tempDir, "foo.txt"))
-				Expect(err).NotTo(HaveOccurred())
-				Expect(string(body)).To(ContainSubstring("gopher"))
-			})
-		})
+			body, err := ioutil.ReadFile(filepath.Join(tempDir, innerFilename))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(body)).To(ContainSubstring(innerFileContents))
+		},
+			Entry("when the blob is a tarball", "example.tgz", filepath.Join("example", "foo.txt"), "gopher"),
+			Entry("when the blob is a zip", "example.zip", filepath.Join("example", "foo.txt"), "gopher"),
+			Entry("when the blob is a gz", "foo.txt.gz", "foo.txt", "gopher"),
+			Entry("when the blob is a tarball, but doesn't have tgz extension", "example.mytype", filepath.Join("example", "foo.txt"), "gopher"),
+		)
 
 		Context("when an invalid extension is provided", func() {
 			It("returns an error", func() {
@@ -173,10 +147,7 @@ var _ = Describe("In", func() {
 
 		It("returns an error when un-tar fails", func() {
 			err := in.UnpackBlob("does-not-exist.tgz")
-			Expect(err).To(MatchError(Or(
-				ContainSubstring("tar: Error opening archive: Failed to open 'does-not-exist.tgz'"),
-				ContainSubstring("tar: does-not-exist.tgz: Cannot open: No such file or directory\ntar: Error is not recoverable: exiting now\n"),
-			)))
+			Expect(err).To(MatchError("open does-not-exist.tgz: no such file or directory"))
 		})
 	})
 })

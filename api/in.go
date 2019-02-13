@@ -10,6 +10,8 @@ import (
 	"path"
 	"path/filepath"
 	"time"
+
+	"github.com/h2non/filetype"
 )
 
 const (
@@ -70,15 +72,19 @@ func (i In) CopyBlobToDestination(destinationDir, blobName string, snapshot time
 }
 
 func (i In) UnpackBlob(filename string) error {
-	fileExtension := filepath.Ext(filename)
 	var cmd *exec.Cmd
 
-	switch fileExtension {
-	case ".gz":
+	fileType, err := mimeType(filename)
+	if err != nil {
+		return err
+	}
+
+	switch fileType {
+	case "application/gzip":
 		cmd = exec.Command("gzip", "-d", filename)
-	case ".tgz":
+	case "application/x-tar":
 		cmd = exec.Command("tar", "-xvf", filename, "-C", filepath.Dir(filename))
-	case ".zip":
+	case "application/zip":
 		cmd = exec.Command("unzip", filename, "-d", filepath.Dir(filename))
 	default:
 		return fmt.Errorf("invalid extension: %s", filename)
@@ -86,13 +92,36 @@ func (i In) UnpackBlob(filename string) error {
 
 	var out bytes.Buffer
 	cmd.Stderr = &out
-	err := cmd.Run()
+	err = cmd.Run()
 
 	if err != nil {
 		return errors.New(out.String())
 	}
 
 	return nil
+}
+
+func mimeType(filename string) (string, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return "", err
+	}
+
+	buf := make([]byte, 512)
+	_, err = file.Read(buf)
+	if err != nil && err != io.EOF {
+		// not tested
+		return "", err
+	}
+
+	kind, err := filetype.Match(buf)
+	if err != nil {
+		// not tested
+		return "", err
+	}
+
+	return kind.MIME.Value, nil
+
 }
 
 func min(x, y uint64) uint64 {

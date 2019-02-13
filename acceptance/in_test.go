@@ -13,6 +13,7 @@ import (
 	"time"
 
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
@@ -37,16 +38,9 @@ var _ = Describe("In", func() {
 	})
 
 	Context("when unpack is true", func() {
-		var (
-			snapshotTimestamp *time.Time
-		)
-
-		Context("when the blob is a tarball", func() {
-			BeforeEach(func() {
-				snapshotTimestamp = uploadBlobWithSnapshot(container, "example.tgz", filepath.Join("fixtures", "example.tgz"))
-			})
-
-			It("un-tars the blob onto the filesystem", func() {
+		Describe("Unpacking", func() {
+			DescribeTable("unpacks the blob onto the filesystem", func(filename, innerFilename, innerFileContents string) {
+				snapshotTimestamp := uploadBlobWithSnapshot(container, filename, filepath.Join("fixtures", filename))
 				in := exec.Command(pathToIn, tempDir)
 				in.Stderr = os.Stderr
 
@@ -58,7 +52,7 @@ var _ = Describe("In", func() {
 							"storage_account_name": %q,
 							"storage_account_key": %q,
 							"container": %q,
-							"versioned_file": "example.tgz"
+							"versioned_file": %q
 						},
 						"params": {
 							"unpack": true
@@ -68,6 +62,7 @@ var _ = Describe("In", func() {
 					config.StorageAccountName,
 					config.StorageAccountKey,
 					container,
+					filename,
 					snapshotTimestamp.Format(time.RFC3339Nano),
 				))
 				Expect(err).NotTo(HaveOccurred())
@@ -75,99 +70,17 @@ var _ = Describe("In", func() {
 				err = in.Run()
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = os.Stat(filepath.Join(tempDir, "example", "foo.txt"))
+				_, err = os.Stat(filepath.Join(tempDir, innerFilename))
 				Expect(err).NotTo(HaveOccurred())
 
-				body, err := ioutil.ReadFile(filepath.Join(tempDir, "example", "foo.txt"))
+				body, err := ioutil.ReadFile(filepath.Join(tempDir, innerFilename))
 				Expect(err).NotTo(HaveOccurred())
-				Expect(string(body)).To(ContainSubstring("Hello from inside this tarball!"))
-			})
-		})
-
-		Context("when the blob is a zip file", func() {
-			BeforeEach(func() {
-				snapshotTimestamp = uploadBlobWithSnapshot(container, "example.zip", filepath.Join("fixtures", "example.zip"))
-			})
-
-			It("un-zips the blob onto the filesystem", func() {
-				in := exec.Command(pathToIn, tempDir)
-				in.Stderr = os.Stderr
-
-				stdin, err := in.StdinPipe()
-				Expect(err).NotTo(HaveOccurred())
-
-				_, err = io.WriteString(stdin, fmt.Sprintf(`{
-							"source": {
-								"storage_account_name": %q,
-								"storage_account_key": %q,
-								"container": %q,
-								"versioned_file": "example.zip"
-							},
-							"params": {
-								"unpack": true
-							},
-							"version": { "snapshot": %q }
-						}`,
-					config.StorageAccountName,
-					config.StorageAccountKey,
-					container,
-					snapshotTimestamp.Format(time.RFC3339Nano),
-				))
-				Expect(err).NotTo(HaveOccurred())
-
-				err = in.Run()
-				Expect(err).NotTo(HaveOccurred())
-
-				_, err = os.Stat(filepath.Join(tempDir, "example", "foo.txt"))
-				Expect(err).NotTo(HaveOccurred())
-
-				body, err := ioutil.ReadFile(filepath.Join(tempDir, "example", "foo.txt"))
-				Expect(err).NotTo(HaveOccurred())
-				Expect(string(body)).To(ContainSubstring("gopher"))
-			})
-		})
-
-		Context("when the blob is a gz file", func() {
-			BeforeEach(func() {
-				snapshotTimestamp = uploadBlobWithSnapshot(container, "foo.txt.gz", filepath.Join("fixtures", "foo.txt.gz"))
-			})
-
-			It("un-gzips the blob onto the filesystem", func() {
-				in := exec.Command(pathToIn, tempDir)
-				in.Stderr = os.Stderr
-
-				stdin, err := in.StdinPipe()
-				Expect(err).NotTo(HaveOccurred())
-
-				_, err = io.WriteString(stdin, fmt.Sprintf(`{
-							"source": {
-								"storage_account_name": %q,
-								"storage_account_key": %q,
-								"container": %q,
-								"versioned_file": "foo.txt.gz"
-							},
-							"params": {
-								"unpack": true
-							},
-							"version": { "snapshot": %q }
-						}`,
-					config.StorageAccountName,
-					config.StorageAccountKey,
-					container,
-					snapshotTimestamp.Format(time.RFC3339Nano),
-				))
-				Expect(err).NotTo(HaveOccurred())
-
-				err = in.Run()
-				Expect(err).NotTo(HaveOccurred())
-
-				_, err = os.Stat(filepath.Join(tempDir, "foo.txt"))
-				Expect(err).NotTo(HaveOccurred())
-
-				body, err := ioutil.ReadFile(filepath.Join(tempDir, "foo.txt"))
-				Expect(err).NotTo(HaveOccurred())
-				Expect(string(body)).To(ContainSubstring("gopher"))
-			})
+				Expect(string(body)).To(ContainSubstring(innerFileContents))
+			},
+				Entry("when the blob is a tarball", "example.tgz", filepath.Join("example", "foo.txt"), "gopher"),
+				Entry("when the blob is a zip file", "example.zip", filepath.Join("example", "foo.txt"), "gopher"),
+				Entry("when the blob is a gzip file", "foo.txt.gz", "foo.txt", "gopher"),
+			)
 		})
 	})
 

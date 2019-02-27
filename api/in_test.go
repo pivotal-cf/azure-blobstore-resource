@@ -134,17 +134,17 @@ var _ = Describe("In", func() {
 			Entry("when the blob is a tarball", "example.tgz", filepath.Join("example", "foo.txt"), "gopher"),
 			Entry("when the blob is a zip", "example.zip", filepath.Join("example", "foo.txt"), "gopher"),
 			Entry("when the blob is a gz", "foo.txt.gz", "foo.txt", "gopher"),
+			Entry("when the blob is a tar.gz", "example.tar.gz", filepath.Join("example", "foo.txt"), "gopher"),
 			Entry("when the blob is an archive, but doesn't have a normal extension", "example.mytype", filepath.Join("example", "foo.txt"), "gopher"),
 		)
 
-		Context("when an invalid extension is provided", func() {
+		Context("when an invalid archive is provided", func() {
 			It("returns an error", func() {
 				err := copyFile(filepath.Join("fixtures", "example.txt"), filepath.Join(tempDir, "example.txt"))
 				Expect(err).NotTo(HaveOccurred())
 
 				err = in.UnpackBlob(filepath.Join(tempDir, "example.txt"))
-				Expect(err).To(HaveOccurred())
-				Expect(err).To(MatchError(fmt.Sprintf("invalid extension: %s", filepath.Join(tempDir, "example.txt"))))
+				Expect(err).To(MatchError(fmt.Sprintf("invalid archive: %s", filepath.Join(tempDir, "example.txt"))))
 			})
 		})
 

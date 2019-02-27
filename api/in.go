@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/h2non/filetype"
@@ -89,7 +90,7 @@ func (i In) UnpackBlob(filename string) error {
 		cmd = exec.Command("unzip", filename, "-d", filepath.Dir(filename))
 		defer os.Remove(filename)
 	default:
-		return fmt.Errorf("invalid extension: %s", filename)
+		return fmt.Errorf("invalid archive: %s", filename)
 	}
 
 	var out bytes.Buffer
@@ -98,6 +99,17 @@ func (i In) UnpackBlob(filename string) error {
 	err = cmd.Run()
 	if err != nil {
 		return errors.New(out.String())
+	}
+
+	if fileType == "application/gzip" {
+		decompressedGzipFilename := strings.TrimSuffix(filename, filepath.Ext(filename))
+		err = i.UnpackBlob(decompressedGzipFilename)
+		if err != nil {
+			if !strings.Contains(err.Error(), "invalid archive") {
+				// not tested
+				return err
+			}
+		}
 	}
 
 	return nil

@@ -44,7 +44,7 @@ Places the blob file in the destination.
 #### Parameters
 
 * `unpack`: *Optional.* If true, the blob will be unpacked before running the task. Supports
-  tar, zip, gzip files. Doesn't currently support gzipped tar files.
+  tar, zip, gzip files.
 
 ### `out`: Upload a blob to the container.
 

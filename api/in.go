@@ -103,6 +103,9 @@ func (i In) UnpackBlob(filename string) error {
 
 	if fileType == "application/gzip" {
 		decompressedGzipFilename := strings.TrimSuffix(filename, filepath.Ext(filename))
+		if filepath.Ext(filename) == ".tgz" {
+			decompressedGzipFilename = decompressedGzipFilename + ".tar"
+		}
 		err = i.UnpackBlob(decompressedGzipFilename)
 		if err != nil {
 			if !strings.Contains(err.Error(), "invalid archive") {

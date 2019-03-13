@@ -64,13 +64,15 @@ var _ = Describe("Check", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			var versions []struct {
-				Snapshot time.Time `json:"snapshot"`
+				Path     *string    `json:"path"`
+				Snapshot *time.Time `json:"snapshot"`
 			}
 			err = json.Unmarshal(output, &versions)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(len(versions)).To(Equal(1))
-			Expect(versions[0].Snapshot).To(Equal(*snapshotTimestamp))
+			Expect(versions[0].Path).To(BeNil())
+			Expect(versions[0].Snapshot).To(Equal(snapshotTimestamp))
 		})
 	})
 
@@ -104,13 +106,15 @@ var _ = Describe("Check", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			var versions []struct {
-				Snapshot time.Time `json:"snapshot"`
+				Path     *string    `json:"path"`
+				Snapshot *time.Time `json:"snapshot"`
 			}
 			err = json.Unmarshal(output, &versions)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(len(versions)).To(Equal(1))
-			Expect(versions[0].Snapshot).To(Equal(time.Time{}))
+			Expect(versions[0].Snapshot).To(Equal(&time.Time{}))
+			Expect(versions[0].Path).To(BeNil())
 		})
 	})
 
@@ -178,13 +182,19 @@ var _ = Describe("Check", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			var versions []struct {
-				Path string `json:"path"`
+				Path     *string    `json:"path"`
+				Snapshot *time.Time `json:"snapshot"`
 			}
 			err = json.Unmarshal(output, &versions)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(len(versions)).To(Equal(1))
-			Expect(versions[0].Path).To(Equal("example-1.2.3.json"))
+			Expect(versions[0].Path).To(Equal(stringPtr("example-1.2.3.json")))
+			Expect(versions[0].Snapshot).To(BeNil())
 		})
 	})
 })
+
+func stringPtr(value string) *string {
+	return &value
+}

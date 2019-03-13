@@ -10,8 +10,8 @@ import (
 )
 
 type Version struct {
-	Snapshot time.Time `json:"snapshot,omitempty"`
-	Path     string    `json:"path,omitempty"`
+	Snapshot *time.Time `json:"snapshot,omitempty"`
+	Path     *string    `json:"path,omitempty"`
 }
 
 type Check struct {
@@ -49,7 +49,7 @@ func (c Check) LatestVersion(filename string) (Version, error) {
 	}
 
 	return Version{
-		Snapshot: latestSnapshot,
+		Snapshot: &latestSnapshot,
 	}, nil
 }
 
@@ -93,7 +93,7 @@ func (c Check) LatestVersionRegexp(expr string) (Version, error) {
 	}
 
 	return Version{
-		Path: latestBlobName,
+		Path: &latestBlobName,
 	}, nil
 }
 

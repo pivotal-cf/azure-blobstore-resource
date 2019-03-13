@@ -60,7 +60,7 @@ var _ = Describe("Check", func() {
 						Snapshots: true,
 					},
 				}))
-				Expect(latestVersion.Snapshot).To(Equal(expectedSnapshot))
+				Expect(latestVersion.Snapshot).To(Equal(&expectedSnapshot))
 			})
 
 			Context("when an error occurs", func() {
@@ -114,7 +114,7 @@ var _ = Describe("Check", func() {
 				Expect(azureClient.ListBlobsCall.CallCount).To(Equal(1))
 				Expect(azureClient.ListBlobsCall.Receives.ListBlobsParameters).To(Equal(storage.ListBlobsParameters{}))
 
-				Expect(latestVersion.Path).To(Equal("example-1.2.3.json"))
+				Expect(latestVersion.Path).To(Equal(stringPtr("example-1.2.3.json")))
 			})
 		})
 
@@ -142,7 +142,7 @@ var _ = Describe("Check", func() {
 				latestVersion, err := check.LatestVersionRegexp("example-(.*).json")
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(latestVersion.Path).To(Equal("example-3.json"))
+				Expect(latestVersion.Path).To(Equal(stringPtr("example-3.json")))
 			})
 		})
 
@@ -170,7 +170,7 @@ var _ = Describe("Check", func() {
 				latestVersion, err := check.LatestVersionRegexp("example-.-(.*)-(.).json")
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(latestVersion.Path).To(Equal("example-b-1.2.3-b.json"))
+				Expect(latestVersion.Path).To(Equal(stringPtr("example-b-1.2.3-b.json")))
 			})
 
 			Context("when a group is named version", func() {
@@ -178,7 +178,7 @@ var _ = Describe("Check", func() {
 					latestVersion, err := check.LatestVersionRegexp("example-(.)-(?P<version>.*)-..json")
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(latestVersion.Path).To(Equal("example-b-1.2.3-b.json"))
+					Expect(latestVersion.Path).To(Equal(stringPtr("example-b-1.2.3-b.json")))
 				})
 			})
 		})

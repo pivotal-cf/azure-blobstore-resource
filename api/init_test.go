@@ -11,3 +11,7 @@ func TestCheck(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "api/check")
 }
+
+func stringPtr(value string) *string {
+	return &value
+}

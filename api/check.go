@@ -92,6 +92,10 @@ func (c Check) LatestVersionRegexp(expr string) (Version, error) {
 		}
 	}
 
+	if latestBlobName == "" {
+		return Version{}, fmt.Errorf("no matching blob found for regexp: %s", expr)
+	}
+
 	return Version{
 		Path: &latestBlobName,
 	}, nil

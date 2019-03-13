@@ -183,6 +183,23 @@ var _ = Describe("Check", func() {
 			})
 		})
 
+		Context("when no blob is found to match regexp", func() {
+			BeforeEach(func() {
+				azureClient.ListBlobsCall.Returns.BlobListResponse = storage.BlobListResponse{
+					Blobs: []storage.Blob{
+						storage.Blob{
+							Name: "foo.json",
+						},
+					},
+				}
+			})
+
+			It("returns a version using the first group as the version", func() {
+				_, err := check.LatestVersionRegexp("example-(.*).json")
+				Expect(err).To(MatchError("no matching blob found for regexp: example-(.*).json"))
+			})
+		})
+
 		Context("when azure client list blobs returns an error", func() {
 			BeforeEach(func() {
 				azureClient.ListBlobsCall.Returns.Error = errors.New("something bad happened")

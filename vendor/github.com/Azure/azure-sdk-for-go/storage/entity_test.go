@@ -1,12 +1,26 @@
 package storage
 
+// Copyright 2017 Microsoft Corporation
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
 import (
 	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
-	"github.com/satori/uuid"
+	"github.com/satori/go.uuid"
 	chk "gopkg.in/check.v1"
 )
 
@@ -444,7 +458,7 @@ func (s *StorageEntitySuite) TestExecuteQueryNextResults(c *chk.C) {
 }
 
 func (s *StorageEntitySuite) Test_entityMarshalJSON(c *chk.C) {
-	expected := `{"Address":"Mountain View","Age":23,"AmountDue":200.23,"Binary":"abcd","Binary@odata.type":"Edm.Binary","CustomerCode":"c9da6455-213d-42c9-9a79-3e9149a57833","CustomerCode@odata.type":"Edm.Guid","CustomerSince":"1992-12-20T21:55:00Z","CustomerSince@odata.type":"Edm.DateTime","IsActive":true,"NumberOfOrders":"255","NumberOfOrders@odata.type":"Edm.Int64","PartitionKey":"mypartitionkey","RowKey":"myrowkey"}`
+	expected := `{"Address":"Mountain View","Age":23,"AmountDue":200.23,"Binary":"YWJjZA==","Binary@odata.type":"Edm.Binary","CustomerCode":"c9da6455-213d-42c9-9a79-3e9149a57833","CustomerCode@odata.type":"Edm.Guid","CustomerSince":"1992-12-20T21:55:00Z","CustomerSince@odata.type":"Edm.DateTime","IsActive":true,"NumberOfOrders":"255","NumberOfOrders@odata.type":"Edm.Int64","PartitionKey":"mypartitionkey","RowKey":"myrowkey"}`
 
 	entity := Entity{
 		PartitionKey: "mypartitionkey",
@@ -490,7 +504,7 @@ func (s *StorageEntitySuite) Test_entityUnmarshalJSON(c *chk.C) {
         "Age": 23,
         "AmountDue":200.23,
         "Binary@odata.type": "Edm.Binary",
-        "Binary": "abcd",
+        "Binary": "YWJjZA==",
         "CustomerCode@odata.type":"Edm.Guid",
         "CustomerCode":"c9da6455-213d-42c9-9a79-3e9149a57833",
         "CustomerSince@odata.type":"Edm.DateTime",

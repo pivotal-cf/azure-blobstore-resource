@@ -256,7 +256,7 @@ var _ = Describe("In", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(url.Hostname()).To(Equal(fmt.Sprintf("%s.blob.core.windows.net", config.StorageAccountName)))
 			Expect(url.EscapedPath()).To(Equal(fmt.Sprintf("/%s/sub/example.json", container)))
-			Expect(len(url.Query()["snapshot"][0])).To(Equal(28)) // azure is sensetive to trailing zero's
+			Expect(len(url.Query()["snapshot"][0])).To(Equal(28)) // azure is sensitive to trailing zero's
 			_, err = os.Stat(filepath.Join(tempDir, "sub", "example.json"))
 			Expect(err).NotTo(HaveOccurred())
 		})

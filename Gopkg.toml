@@ -5,9 +5,14 @@
   name = "gopkg.in/fsnotify.v1"
   source = "https://github.com/fsnotify/fsnotify.git"
 
+# see https://github.com/census-ecosystem/opencensus-go-exporter-ocagent/commit/7aed492875382edabce5bd833aad08ee8de8d2ad
+[[override]]
+  name = "github.com/census-instrumentation/opencensus-proto"
+  version = "0.1.0"
+
 [[constraint]]
   name = "github.com/Azure/azure-sdk-for-go"
-  version = "20.2.0"
+  version = "26.4.0"
 
 [[constraint]]
   name = "github.com/onsi/ginkgo"

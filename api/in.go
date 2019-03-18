@@ -30,11 +30,6 @@ func NewIn(azureClient azureClient) In {
 }
 
 func (i In) CopyBlobToDestination(destinationDir, blobName string, snapshot time.Time) error {
-	blobSize, err := i.azureClient.GetBlobSizeInBytes(blobName, snapshot)
-	if err != nil {
-		return err
-	}
-
 	fileName := path.Base(blobName)
 	file, err := os.Create(filepath.Join(destinationDir, fileName))
 	if err != nil {
@@ -42,27 +37,7 @@ func (i In) CopyBlobToDestination(destinationDir, blobName string, snapshot time
 	}
 	defer file.Close()
 
-	var start, end uint64
-	end = min(ChunkSize-1, uint64(blobSize))
-
-	for start < uint64(blobSize) {
-		blobReader, err := i.azureClient.GetRange(blobName, start, end, snapshot)
-		if err != nil {
-			return err
-		}
-
-		_, err = io.Copy(file, blobReader)
-		if err != nil {
-			return err
-		}
-
-		blobReader.Close()
-
-		start = min(start+ChunkSize, uint64(blobSize))
-		end = min(end+ChunkSize, uint64(blobSize))
-	}
-
-	return nil
+	return i.azureClient.DownloadBlobToFile(blobName, file)
 }
 
 func (i In) UnpackBlob(filename string) error {

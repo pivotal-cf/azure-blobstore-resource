@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/url"
+	"os"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/storage"
@@ -110,35 +111,23 @@ func (c Client) Get(blobName string, snapshot time.Time) ([]byte, error) {
 	return data, nil
 }
 
-func (c Client) GetRange(blobName string, startRangeInBytes, endRangeInBytes uint64, snapshot time.Time) (io.ReadCloser, error) {
-	client, err := storage.NewClient(c.storageAccountName, c.storageAccountKey, c.baseURL, storage.DefaultAPIVersion, true)
+// DownloadToFile download specified blobName to specified file
+func (c Client) DownloadBlobToFile(blobName string, file *os.File) error {
+
+	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s", c.storageAccountName, c.container, blobName))
+
+	credential, err := azblob.NewSharedKeyCredential(c.storageAccountName, c.storageAccountKey)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	var snapshotPtr *time.Time
-	if !snapshot.IsZero() {
-		snapshotPtr = &snapshot
-	}
+	blobURL := azblob.NewBlobURL(*u, azblob.NewPipeline(credential, azblob.PipelineOptions{}))
 
-	blobClient := client.GetBlobService()
-	cnt := blobClient.GetContainerReference(c.container)
-	blob := cnt.GetBlobReference(blobName)
+	ctx := context.Background()
 
-	blobReader, err := blob.GetRange(&storage.GetBlobRangeOptions{
-		Range: &storage.BlobRange{
-			Start: startRangeInBytes,
-			End:   endRangeInBytes,
-		},
-		GetBlobOptions: &storage.GetBlobOptions{
-			Snapshot: snapshotPtr,
-		},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return blobReader, nil
+	// todo: investigate use of parallelism in options and also retrying downloading of blocks sounds promising
+	// as i've seen large downloads (pas tile) fail 80% of the way..
+	return azblob.DownloadBlobToFile(ctx, blobURL, 0, 0, file, azblob.DownloadFromBlobOptions{})
 }
 
 // UploadToBlobstore adapted from https://godoc.org/github.com/Azure/azure-storage-blob-go/azblob#example-UploadStreamToBlockBlob

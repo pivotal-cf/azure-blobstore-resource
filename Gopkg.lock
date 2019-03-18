@@ -10,6 +10,14 @@
   version = "v0.2.0"
 
 [[projects]]
+  digest = "1:bd444f85703c5aff1ba686cb52766fd38c3730d4e1dfb02327b2481bfe674997"
+  name = "github.com/Azure/azure-pipeline-go"
+  packages = ["pipeline"]
+  pruneopts = ""
+  revision = "b8e3409182fd52e74f7d7bdfbff5833591b3b655"
+  version = "v0.1.8"
+
+[[projects]]
   digest = "1:d15f7e8f6f05ba490195498b31b5eb400a29185634cdf9a4b7206a16ee7712d4"
   name = "github.com/Azure/azure-sdk-for-go"
   packages = [
@@ -19,6 +27,14 @@
   pruneopts = ""
   revision = "f3c55abc60e10609ba77c755cd5b2c94960018be"
   version = "v26.4.0"
+
+[[projects]]
+  digest = "1:d04cd5f86296a529d8596b7f95e1b3cc215b85e496e75a79694b0bbbfa403ae5"
+  name = "github.com/Azure/azure-storage-blob-go"
+  packages = ["azblob"]
+  pruneopts = ""
+  revision = "457680cc0804810f6d02958481e0ffdda51d5c60"
+  version = "0.5.0"
 
 [[projects]]
   digest = "1:60507cc8c1e09eb4fbabaef1291803f4a3ab93250ecacb8af4376bbc62214ce0"
@@ -353,6 +369,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/Azure/azure-sdk-for-go/storage",
+    "github.com/Azure/azure-storage-blob-go/azblob",
     "github.com/cppforlife/go-semi-semantic/version",
     "github.com/h2non/filetype",
     "github.com/onsi/ginkgo",

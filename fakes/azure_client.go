@@ -2,6 +2,8 @@ package fakes
 
 import (
 	"io"
+	"os"
+	"path"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/storage"
@@ -40,12 +42,11 @@ type AzureClient struct {
 			Error    error
 		}
 	}
-	GetRangeCall struct {
+	DownloadBlobToFileCall struct {
 		CallCount int
-		Receives  []GetRangeCallReceives
+		Receives  []DownloadBlobToFileReceives
 		Returns   struct {
-			BlobReader io.ReadCloser
-			Error      error
+			Error error
 		}
 	}
 	UploadFromStreamCall struct {
@@ -81,11 +82,9 @@ type AzureClient struct {
 	}
 }
 
-type GetRangeCallReceives struct {
-	BlobName          string
-	StartRangeInBytes uint64
-	EndRangeInBytes   uint64
-	Snapshot          time.Time
+type DownloadBlobToFileReceives struct {
+	BlobName string
+	FileName string
 }
 
 func (a *AzureClient) ListBlobs(params storage.ListBlobsParameters) (storage.BlobListResponse, error) {
@@ -108,15 +107,13 @@ func (a *AzureClient) Get(blobName string, snapshot time.Time) ([]byte, error) {
 	return a.GetCall.Returns.BlobData, a.GetCall.Returns.Error
 }
 
-func (a *AzureClient) GetRange(blobName string, startRangeInBytes, endRangeInBytes uint64, snapshot time.Time) (io.ReadCloser, error) {
-	a.GetRangeCall.CallCount++
-	a.GetRangeCall.Receives = append(a.GetRangeCall.Receives, GetRangeCallReceives{
-		BlobName:          blobName,
-		StartRangeInBytes: startRangeInBytes,
-		EndRangeInBytes:   endRangeInBytes,
-		Snapshot:          snapshot,
+func (a *AzureClient) DownloadBlobToFile(blobName string, file *os.File) error {
+	a.DownloadBlobToFileCall.CallCount++
+	a.DownloadBlobToFileCall.Receives = append(a.DownloadBlobToFileCall.Receives, DownloadBlobToFileReceives{
+		BlobName: blobName,
+		FileName: path.Base(file.Name()),
 	})
-	return a.GetRangeCall.Returns.BlobReader, a.GetRangeCall.Returns.Error
+	return a.DownloadBlobToFileCall.Returns.Error
 }
 
 func (a *AzureClient) UploadFromStream(blobName string, stream io.Reader) error {

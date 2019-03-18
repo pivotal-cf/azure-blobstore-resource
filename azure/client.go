@@ -1,13 +1,15 @@
 package azure
 
 import (
-	"encoding/base64"
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/url"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/storage"
+	"github.com/Azure/azure-storage-blob-go/azblob"
 )
 
 const (
@@ -122,6 +124,7 @@ func (c Client) GetRange(blobName string, startRangeInBytes, endRangeInBytes uin
 	blobClient := client.GetBlobService()
 	cnt := blobClient.GetContainerReference(c.container)
 	blob := cnt.GetBlobReference(blobName)
+
 	blobReader, err := blob.GetRange(&storage.GetBlobRangeOptions{
 		Range: &storage.BlobRange{
 			Start: startRangeInBytes,
@@ -138,55 +141,24 @@ func (c Client) GetRange(blobName string, startRangeInBytes, endRangeInBytes uin
 	return blobReader, nil
 }
 
+// UploadToBlobstore adapted from https://godoc.org/github.com/Azure/azure-storage-blob-go/azblob#example-UploadStreamToBlockBlob
 func (c Client) UploadFromStream(blobName string, stream io.Reader) error {
-	client, err := storage.NewClient(c.storageAccountName, c.storageAccountKey, c.baseURL, storage.DefaultAPIVersion, true)
+
+	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s", c.storageAccountName, c.container, blobName))
+
+	credential, err := azblob.NewSharedKeyCredential(c.storageAccountName, c.storageAccountKey)
 	if err != nil {
 		return err
 	}
 
-	blobClient := client.GetBlobService()
-	cnt := blobClient.GetContainerReference(c.container)
-	blob := cnt.GetBlobReference(blobName)
+	blockBlobURL := azblob.NewBlockBlobURL(*u, azblob.NewPipeline(credential, azblob.PipelineOptions{}))
 
-	err = blob.CreateBlockBlob(&storage.PutBlobOptions{})
-	if err != nil {
-		return err
-	}
+	ctx := context.Background()
 
-	buffer := make([]byte, ChunkSize)
-	blocks := []storage.Block{}
-	i := 0
-	for {
-		bytesRead, err := stream.Read(buffer)
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
+	_, err = azblob.UploadStreamToBlockBlob(ctx, stream, blockBlobURL,
+		azblob.UploadStreamToBlockBlobOptions{BufferSize: ChunkSize, MaxBuffers: 3})
 
-			return err
-		}
-
-		chunk := buffer[:bytesRead]
-		blockID := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("BlockID{%07d}", i)))
-		err = blob.PutBlock(blockID, chunk, &storage.PutBlockOptions{})
-		if err != nil {
-			return err
-		}
-
-		blocks = append(blocks, storage.Block{
-			blockID,
-			storage.BlockStatusUncommitted,
-		})
-
-		i++
-	}
-
-	err = blob.PutBlockList(blocks, &storage.PutBlockListOptions{})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (c Client) CreateSnapshot(blobName string) (time.Time, error) {

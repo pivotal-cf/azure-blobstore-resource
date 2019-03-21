@@ -48,10 +48,9 @@ Places the blob file in the destination.
 
 ### `out`: Upload a blob to the container.
 
-Uploads a file to the container. After uploading the blob it will create a
-new snapshot of the blob. If `regexp` is specified, the new file will be uploaded
+Uploads a file to the container. If `regexp` is specified, the new file will be uploaded
 to the directory that the regex searches in. If `versioned_file` is specified, the
-new file will be uploaded as a new version of that file.
+new file will be uploaded as a new snapshot of that file.
 
 #### Parameters
 

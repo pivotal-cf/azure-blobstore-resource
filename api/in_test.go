@@ -75,7 +75,7 @@ var _ = Describe("In", func() {
 		})
 
 		Context("when a sub directory is specified within destination", func() {
-			It("creates the sub directories", func() {
+			It("does not create the sub directories (matches s3 resource implementation)", func() {
 				err := in.CopyBlobToDestination(tempDir, "./sub/dir/example.json", snapshot)
 				Expect(err).NotTo(HaveOccurred())
 
@@ -96,7 +96,7 @@ var _ = Describe("In", func() {
 				Expect(azureClient.GetRangeCall.Receives[2].StartRangeInBytes).To(Equal(uint64(api.ChunkSize * 2)))
 				Expect(azureClient.GetRangeCall.Receives[2].EndRangeInBytes).To(Equal(uint64(api.ChunkSize*2 + 50)))
 
-				data, err := ioutil.ReadFile(filepath.Join(tempDir, "sub", "dir", "example.json"))
+				data, err := ioutil.ReadFile(filepath.Join(tempDir, "example.json"))
 				Expect(err).NotTo(HaveOccurred())
 				Expect(string(data)).To(Equal(`{"key": "value"}`))
 			})

@@ -35,15 +35,8 @@ func (i In) CopyBlobToDestination(destinationDir, blobName string, snapshot time
 		return err
 	}
 
-	subDir := path.Dir(blobName)
-	if subDir != "" {
-		err := os.MkdirAll(filepath.Join(destinationDir, subDir), os.ModePerm)
-		if err != nil {
-			return err
-		}
-	}
-
-	file, err := os.Create(filepath.Join(destinationDir, blobName))
+	fileName := path.Base(blobName)
+	file, err := os.Create(filepath.Join(destinationDir, fileName))
 	if err != nil {
 		return err
 	}

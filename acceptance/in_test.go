@@ -320,6 +320,55 @@ var _ = Describe("In", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(fileInfo.Size()).To(Equal(fileSize))
 		})
+
+		Context("when skip_download is configured", func() {
+			It("skips download and creates version and url file in directory", func() {
+				in := exec.Command(pathToIn, tempDir)
+				in.Stderr = os.Stderr
+
+				stdin, err := in.StdinPipe()
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = io.WriteString(stdin, fmt.Sprintf(`{
+					"source": {
+						"storage_account_name": %q,
+						"storage_account_key": %q,
+						"container": %q,
+						"versioned_file": "big_file_on_azure"
+					},
+                                        "params": { "skip_download": true },
+					"version": { "snapshot": %q, "version": "1.2.3" }
+				}`,
+					config.StorageAccountName,
+					config.StorageAccountKey,
+					container,
+					snapshotTimestamp.Format(time.RFC3339Nano),
+				))
+				Expect(err).NotTo(HaveOccurred())
+
+				outputJSON, err := in.Output()
+				Expect(err).NotTo(HaveOccurred())
+
+				var output struct {
+					Version struct {
+						Snapshot time.Time `json:"snapshot"`
+					} `json:"version"`
+					Metadata []struct {
+						Name  string `json:"name"`
+						Value string `json:"value"`
+					} `json:"metadata"`
+				}
+				err = json.Unmarshal(outputJSON, &output)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = os.Stat(filepath.Join(tempDir, "big_file_on_azure"))
+				Expect(os.IsNotExist(err)).To(Equal(true))
+
+				versionFile, err := ioutil.ReadFile(filepath.Join(tempDir, "version"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(versionFile)).To(Equal("1.2.3"))
+			})
+		})
 	})
 
 	Context("when a regex pattern is provided", func() {
@@ -341,7 +390,7 @@ var _ = Describe("In", func() {
 						"container": %q,
 						"regexp": "example-(.*).json"
 					},
-					"version": { "path": "example-1.2.3.json" }
+					"version": { "path": "example-1.2.3.json", "version": "1.2.3" }
 				}`,
 				config.StorageAccountName,
 				config.StorageAccountKey,
@@ -354,7 +403,8 @@ var _ = Describe("In", func() {
 
 			var output struct {
 				Version struct {
-					Path string `json:"path"`
+					Path    string `json:"path"`
+					Version string `json:"version"`
 				} `json:"version"`
 				Metadata []struct {
 					Name  string `json:"name"`
@@ -364,7 +414,12 @@ var _ = Describe("In", func() {
 			err = json.Unmarshal(outputJSON, &output)
 			Expect(err).NotTo(HaveOccurred())
 
+			versionFile, err := ioutil.ReadFile(filepath.Join(tempDir, "version"))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(versionFile)).To(Equal("1.2.3"))
+
 			Expect(output.Version.Path).To(Equal("example-1.2.3.json"))
+			Expect(output.Version.Version).To(Equal("1.2.3"))
 			Expect(output.Metadata[0].Name).To(Equal("filename"))
 			Expect(output.Metadata[0].Value).To(Equal("example-1.2.3.json"))
 			Expect(output.Metadata[1].Name).To(Equal("url"))

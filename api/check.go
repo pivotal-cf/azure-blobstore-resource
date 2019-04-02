@@ -12,6 +12,7 @@ import (
 type Version struct {
 	Snapshot *time.Time `json:"snapshot,omitempty"`
 	Path     *string    `json:"path,omitempty"`
+	Version  *string    `json:"version,omitempty"`
 }
 
 type Check struct {
@@ -96,8 +97,10 @@ func (c Check) LatestVersionRegexp(expr string) (Version, error) {
 		return Version{}, fmt.Errorf("no matching blob found for regexp: %s", expr)
 	}
 
+	version := latestVersion.AsString()
 	return Version{
-		Path: &latestBlobName,
+		Path:    &latestBlobName,
+		Version: &version,
 	}, nil
 }
 

@@ -46,19 +46,21 @@ func main() {
 		versionPath = inRequest.Version.Path
 	}
 
-	err = in.CopyBlobToDestination(
-		destinationDirectory,
-		blobName,
-		snapshot,
-	)
-	if err != nil {
-		log.Fatal("failed to copy blob: ", err)
-	}
-
-	if inRequest.Params.Unpack {
-		err = in.UnpackBlob(filepath.Join(destinationDirectory, blobName))
+	if !inRequest.Params.SkipDownload {
+		err = in.CopyBlobToDestination(
+			destinationDirectory,
+			blobName,
+			snapshot,
+		)
 		if err != nil {
-			log.Fatal("failed to unpack blob: ", err)
+			log.Fatal("failed to copy blob: ", err)
+		}
+
+		if inRequest.Params.Unpack {
+			err = in.UnpackBlob(filepath.Join(destinationDirectory, blobName))
+			if err != nil {
+				log.Fatal("failed to unpack blob: ", err)
+			}
 		}
 	}
 
@@ -79,10 +81,17 @@ func main() {
 		log.Fatal("failed to write blob url to output directory: ", err)
 	}
 
+	err = ioutil.WriteFile(filepath.Join(destinationDirectory, "version"),
+		[]byte(inRequest.Version.Version), os.ModePerm)
+	if err != nil {
+		log.Fatal("failed to write blob version to output directory: ", err)
+	}
+
 	versionsJSON, err := json.Marshal(api.Response{
 		Version: api.ResponseVersion{
 			Snapshot: snapshot,
 			Path:     versionPath,
+			Version:  inRequest.Version.Version,
 		},
 		Metadata: []api.ResponseMetadata{
 			{

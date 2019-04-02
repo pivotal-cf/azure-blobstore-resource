@@ -25,10 +25,12 @@ type RequestSource struct {
 type InRequestVersion struct {
 	Snapshot time.Time `json:"snapshot,omitempty"`
 	Path     string    `json:"path,omitempty"`
+	Version  string    `json:"version,omitempty"`
 }
 
 type InParams struct {
-	Unpack bool `json:"unpack"`
+	Unpack       bool `json:"unpack"`
+	SkipDownload bool `json:"skip_download"`
 }
 
 type OutParams struct {

@@ -39,9 +39,17 @@ the file will not be found.
 
 ### `in`: Fetch a blob from the container.
 
-Places the blob file in the destination.
+Places the following files in the destination:
+
+* `(filename)`: The file fetched from the bucket.
+
+* `url`: A file containing the URL of the object. If private is true, this URL will be signed.
+
+* `version`: The version identified in the file name.
 
 #### Parameters
+
+* `skip_download`: *Optional.* Skip downloading object.
 
 * `unpack`: *Optional.* If true, the blob will be unpacked before running the task. Supports
   tar, zip, gzip files.

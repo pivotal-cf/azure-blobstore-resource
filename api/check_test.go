@@ -115,6 +115,7 @@ var _ = Describe("Check", func() {
 				Expect(azureClient.ListBlobsCall.Receives.ListBlobsParameters).To(Equal(storage.ListBlobsParameters{}))
 
 				Expect(latestVersion.Path).To(Equal(stringPtr("example-1.2.3.json")))
+				Expect(latestVersion.Version).To(Equal(stringPtr("1.2.3")))
 			})
 		})
 

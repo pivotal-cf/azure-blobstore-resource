@@ -111,10 +111,14 @@ func (c Client) Get(blobName string, snapshot time.Time) ([]byte, error) {
 	return data, nil
 }
 
-// DownloadToFile download specified blobName to specified file
+// DownloadBlobToFile download specified blobName to specified file
 func (c Client) DownloadBlobToFile(blobName string, file *os.File) error {
 
-	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s", c.storageAccountName, c.container, blobName))
+	u, err := url.Parse(fmt.Sprintf("https://%s.blob.%s/%s/%s",
+		c.storageAccountName, c.baseURL, c.container, blobName))
+	if err != nil {
+		return err
+	}
 
 	credential, err := azblob.NewSharedKeyCredential(c.storageAccountName, c.storageAccountKey)
 	if err != nil {
@@ -130,10 +134,14 @@ func (c Client) DownloadBlobToFile(blobName string, file *os.File) error {
 	return azblob.DownloadBlobToFile(ctx, blobURL, 0, 0, file, azblob.DownloadFromBlobOptions{})
 }
 
-// UploadToBlobstore adapted from https://godoc.org/github.com/Azure/azure-storage-blob-go/azblob#example-UploadStreamToBlockBlob
+// UploadFromStream adapted from https://godoc.org/github.com/Azure/azure-storage-blob-go/azblob#example-UploadStreamToBlockBlob
 func (c Client) UploadFromStream(blobName string, stream io.Reader) error {
 
-	u, _ := url.Parse(fmt.Sprintf("https://%s.blob.core.windows.net/%s/%s", c.storageAccountName, c.container, blobName))
+	u, err := url.Parse(fmt.Sprintf("https://%s.blob.%s/%s/%s",
+		c.storageAccountName, c.baseURL, c.container, blobName))
+	if err != nil {
+		return err
+	}
 
 	credential, err := azblob.NewSharedKeyCredential(c.storageAccountName, c.storageAccountKey)
 	if err != nil {

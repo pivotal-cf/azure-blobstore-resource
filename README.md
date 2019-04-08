@@ -34,8 +34,9 @@ One of the two options must be specified:
 
 ### `check`: Extract snapshot versions from the container.
 
-Checks for new snapshot versions for a file. If a blob exists without a snapshot
-the file will not be found.
+Checks for new versions of a file. The resource will either check snapshots when using
+`versioned_file` or versions in the path name when using `regexp`. When using snapshots, if
+a blob exists without a snapshot the resource will create a `0001-01-01T00:00:00Z` timestamp.
 
 ### `in`: Fetch a blob from the container.
 

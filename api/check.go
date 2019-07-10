@@ -28,6 +28,7 @@ func (c Check) LatestVersion(filename string) (Version, error) {
 		Prefix: filename,
 		Include: &storage.IncludeBlobDataset{
 			Snapshots: true,
+			Copy:      true,
 		},
 	})
 	if err != nil {
@@ -37,6 +38,10 @@ func (c Check) LatestVersion(filename string) (Version, error) {
 	var latestSnapshot time.Time
 	var found bool
 	for _, blob := range blobListResponse.Blobs {
+		if blob.Properties.CopyStatus != "" && blob.Properties.CopyStatus != "success" {
+			continue // skip blobs which are still being copied
+		}
+
 		if blob.Name == filename {
 			if blob.Snapshot.After(latestSnapshot) {
 				latestSnapshot = blob.Snapshot
@@ -55,7 +60,12 @@ func (c Check) LatestVersion(filename string) (Version, error) {
 }
 
 func (c Check) LatestVersionRegexp(expr string) (Version, error) {
-	blobListResponse, err := c.azureClient.ListBlobs(storage.ListBlobsParameters{})
+	blobListResponse, err := c.azureClient.ListBlobs(storage.ListBlobsParameters{
+		Include: &storage.IncludeBlobDataset{
+			Snapshots: true,
+			Copy:      true,
+		},
+	})
 	if err != nil {
 		return Version{}, err
 	}
@@ -68,6 +78,10 @@ func (c Check) LatestVersionRegexp(expr string) (Version, error) {
 	var latestVersion version.Version
 	var latestBlobName string
 	for _, blob := range blobListResponse.Blobs {
+		if blob.Properties.CopyStatus != "" && blob.Properties.CopyStatus != "success" {
+			continue // skip blobs which are still being copied
+		}
+
 		var match string
 
 		matches := matcher.FindStringSubmatch(blob.Name)

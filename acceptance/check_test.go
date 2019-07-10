@@ -193,6 +193,88 @@ var _ = Describe("Check", func() {
 			Expect(versions[0].Snapshot).To(BeNil())
 		})
 	})
+
+	Context("when a blob is being copied", func() {
+		BeforeEach(func() {
+			createBlob(container, "example-1.2.3.json")
+		})
+
+		It("returns just the latest version that matches the regexp which has been copied", func() {
+			copyBlob(container, "example-2.3.4.json", "http://example.com")
+
+			Eventually(func() *string {
+				check := exec.Command(pathToCheck)
+				check.Stderr = os.Stderr
+
+				stdin, err := check.StdinPipe()
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = io.WriteString(stdin, fmt.Sprintf(`{
+					"source": {
+						"storage_account_name": %q,
+						"storage_account_key": %q,
+						"container": %q,
+						"regexp": "example-(.*).json"
+					},
+					"version": { "path": "1.0.0" }
+				}`,
+					config.StorageAccountName,
+					config.StorageAccountKey,
+					container,
+				))
+				Expect(err).NotTo(HaveOccurred())
+
+				output, err := check.Output()
+				Expect(err).NotTo(HaveOccurred())
+
+				var versions []struct {
+					Path     *string    `json:"path"`
+					Snapshot *time.Time `json:"snapshot"`
+				}
+				err = json.Unmarshal(output, &versions)
+				Expect(err).NotTo(HaveOccurred())
+				return versions[0].Path
+			}).Should(Equal(stringPtr("example-2.3.4.json")))
+		})
+
+		It("returns just the latest version that matches the regexp which has been copied", func() {
+			copyBlob(container, "example-2.3.4.json", "http://does.not.exist")
+
+			Consistently(func() *string {
+				check := exec.Command(pathToCheck)
+				check.Stderr = os.Stderr
+
+				stdin, err := check.StdinPipe()
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = io.WriteString(stdin, fmt.Sprintf(`{
+					"source": {
+						"storage_account_name": %q,
+						"storage_account_key": %q,
+						"container": %q,
+						"regexp": "example-(.*).json"
+					},
+					"version": { "path": "1.0.0" }
+				}`,
+					config.StorageAccountName,
+					config.StorageAccountKey,
+					container,
+				))
+				Expect(err).NotTo(HaveOccurred())
+
+				output, err := check.Output()
+				Expect(err).NotTo(HaveOccurred())
+
+				var versions []struct {
+					Path     *string    `json:"path"`
+					Snapshot *time.Time `json:"snapshot"`
+				}
+				err = json.Unmarshal(output, &versions)
+				Expect(err).NotTo(HaveOccurred())
+				return versions[0].Path
+			}).Should(Equal(stringPtr("example-1.2.3.json")))
+		})
+	})
 })
 
 func stringPtr(value string) *string {

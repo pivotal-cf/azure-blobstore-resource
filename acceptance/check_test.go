@@ -234,7 +234,7 @@ var _ = Describe("Check", func() {
 				err = json.Unmarshal(output, &versions)
 				Expect(err).NotTo(HaveOccurred())
 				return versions[0].Path
-			}).Should(Equal(stringPtr("example-2.3.4.json")))
+			}, 10*time.Second, time.Second).Should(Equal(stringPtr("example-2.3.4.json")))
 		})
 
 		It("returns just the latest version that matches the regexp which has been copied", func() {

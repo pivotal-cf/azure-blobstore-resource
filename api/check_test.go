@@ -58,6 +58,7 @@ var _ = Describe("Check", func() {
 					Prefix: "example.json",
 					Include: &storage.IncludeBlobDataset{
 						Snapshots: true,
+						Copy: true,
 					},
 				}))
 				Expect(latestVersion.Snapshot).To(Equal(&expectedSnapshot))
@@ -112,7 +113,14 @@ var _ = Describe("Check", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(azureClient.ListBlobsCall.CallCount).To(Equal(1))
-				Expect(azureClient.ListBlobsCall.Receives.ListBlobsParameters).To(Equal(storage.ListBlobsParameters{}))
+				Expect(azureClient.ListBlobsCall.Receives.ListBlobsParameters).To(Equal(storage.ListBlobsParameters{
+					Include: &storage.IncludeBlobDataset{
+						Snapshots:        true,
+						Metadata:         false,
+						UncommittedBlobs: false,
+						Copy:             true,
+					},
+				}))
 
 				Expect(latestVersion.Path).To(Equal(stringPtr("example-1.2.3.json")))
 				Expect(latestVersion.Version).To(Equal(stringPtr("1.2.3")))

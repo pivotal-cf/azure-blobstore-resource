@@ -4,8 +4,9 @@ go 1.12
 
 require (
 	contrib.go.opencensus.io/exporter/ocagent v0.2.0 // indirect
+	github.com/Azure/azure-pipeline-go v0.2.2 // indirect
 	github.com/Azure/azure-sdk-for-go v26.5.0+incompatible
-	github.com/Azure/azure-storage-blob-go v0.6.0
+	github.com/Azure/azure-storage-blob-go v0.7.0
 	github.com/Azure/go-autorest v11.5.2+incompatible // indirect
 	github.com/census-instrumentation/opencensus-proto v0.1.0 // indirect
 	github.com/cppforlife/go-semi-semantic v0.0.0-20160921010311-576b6af77ae4

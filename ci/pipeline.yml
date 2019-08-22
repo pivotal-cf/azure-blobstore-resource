@@ -67,7 +67,7 @@ resources:
 jobs:
 - name: run-tests
   plan:
-  - aggregate:
+  - in_parallel:
     - get: azure-blobstore-resource
       trigger: true
   - task: run-tests
@@ -78,7 +78,7 @@ jobs:
 
 - name: bump-rc-image
   plan:
-  - aggregate:
+  - in_parallel:
     - get: azure-blobstore-resource
       passed: [run-tests]
       trigger: true
@@ -92,7 +92,7 @@ jobs:
 
 - name: test-versioning-put-rc
   plan:
-  - aggregate:
+  - in_parallel:
     - get: azure-blobstore-resource
       passed: [bump-rc-image]
       trigger: true
@@ -106,7 +106,7 @@ jobs:
 
 - name: test-versioning-get-rc
   plan:
-  - aggregate:
+  - in_parallel:
     - get: azure-blobstore-resource
       passed: [test-versioning-put-rc]
       trigger: true
@@ -121,7 +121,7 @@ jobs:
 
 - name: test-regexp-put-rc
   plan:
-  - aggregate:
+  - in_parallel:
     - get: azure-blobstore-resource
       passed: [bump-rc-image]
       trigger: true
@@ -136,7 +136,7 @@ jobs:
 
 - name: test-regexp-get-rc
   plan:
-  - aggregate:
+  - in_parallel:
     - get: azure-blobstore-resource
       passed: [test-regexp-put-rc]
       trigger: true
@@ -152,7 +152,7 @@ jobs:
 
 - name: bump-final-image
   plan:
-  - aggregate:
+  - in_parallel:
     - get: azure-blobstore-resource
       passed: [test-versioning-get-rc, test-regexp-get-rc]
     - get: base-image
@@ -165,7 +165,7 @@ jobs:
 
 - name: run-pr-tests
   plan:
-  - aggregate:
+  - in_parallel:
     - get: azure-blobstore-resource
       resource: pull-requests
   - task: run-tests

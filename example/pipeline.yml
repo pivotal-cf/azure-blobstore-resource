@@ -22,7 +22,7 @@ resources:
 jobs:
 - name: print-config
   plan:
-  - aggregate:
+  - in_parallel:
     - get: azure-blobstore-resource
     - get: configuration
   - task: print-config
@@ -32,7 +32,7 @@ jobs:
 
 - name: write-config
   plan:
-  - aggregate:
+  - in_parallel:
     - get: azure-blobstore-resource
   - task: write-config
     file: azure-blobstore-resource/example/tasks/write-config/task.yml

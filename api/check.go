@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/storage"
@@ -23,7 +24,7 @@ func NewCheck(azureClient azureClient) Check {
 	return Check{azureClient: azureClient}
 }
 
-func (c Check) LatestVersion(filename string) (Version, error) {
+func (c Check) VersionsSince(filename string, snapshot time.Time) ([]Version, error) {
 	blobListResponse, err := c.azureClient.ListBlobs(storage.ListBlobsParameters{
 		Prefix: filename,
 		Include: &storage.IncludeBlobDataset{
@@ -32,10 +33,10 @@ func (c Check) LatestVersion(filename string) (Version, error) {
 		},
 	})
 	if err != nil {
-		return Version{}, err
+		return []Version{}, err
 	}
 
-	var latestSnapshot time.Time
+	var newerVersions []Version
 	var found bool
 	for _, blob := range blobListResponse.Blobs {
 		if blob.Properties.CopyStatus != "" && blob.Properties.CopyStatus != "success" {
@@ -43,20 +44,25 @@ func (c Check) LatestVersion(filename string) (Version, error) {
 		}
 
 		if blob.Name == filename {
-			if blob.Snapshot.After(latestSnapshot) {
-				latestSnapshot = blob.Snapshot
+			if blob.Snapshot.After(snapshot) || blob.Snapshot.Equal(snapshot) {
+				snapshot := blob.Snapshot
+				newerVersions = append(newerVersions, Version{
+					Snapshot: &snapshot,
+				})
 			}
 			found = true
 		}
 	}
 
 	if !found {
-		return Version{}, fmt.Errorf("failed to find blob: %s", filename)
+		return []Version{}, fmt.Errorf("failed to find blob: %s", filename)
 	}
 
-	return Version{
-		Snapshot: &latestSnapshot,
-	}, nil
+	sort.Slice(newerVersions, func(i, j int) bool {
+		return newerVersions[i].Snapshot.Before(*newerVersions[j].Snapshot)
+	})
+
+	return newerVersions, nil
 }
 
 func (c Check) LatestVersionRegexp(expr string) (Version, error) {

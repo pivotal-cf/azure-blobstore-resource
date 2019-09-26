@@ -23,14 +23,18 @@ var _ = Describe("Check", func() {
 		check = api.NewCheck(azureClient)
 	})
 
-	Describe("LatestVersion", func() {
+	Describe("VersionsSince", func() {
 		Context("given a filename", func() {
 			var (
-				expectedSnapshot time.Time
+				expectedSnapshotCurrent time.Time
+				expectedSnapshotNew     time.Time
+				expectedSnapshotNewer   time.Time
 			)
 
 			BeforeEach(func() {
-				expectedSnapshot = time.Date(2017, time.January, 02, 01, 01, 01, 01, time.UTC)
+				expectedSnapshotCurrent = time.Date(2017, time.January, 02, 01, 01, 01, 01, time.UTC)
+				expectedSnapshotNew = time.Date(2017, time.January, 03, 01, 01, 01, 01, time.UTC)
+				expectedSnapshotNewer = time.Date(2017, time.January, 04, 01, 01, 01, 01, time.UTC)
 				azureClient.ListBlobsCall.Returns.BlobListResponse = storage.BlobListResponse{
 					Blobs: []storage.Blob{
 						storage.Blob{
@@ -39,7 +43,15 @@ var _ = Describe("Check", func() {
 						},
 						storage.Blob{
 							Name:     "example.json",
-							Snapshot: expectedSnapshot,
+							Snapshot: expectedSnapshotNewer,
+						},
+						storage.Blob{
+							Name:     "example.json",
+							Snapshot: expectedSnapshotCurrent,
+						},
+						storage.Blob{
+							Name:     "example.json",
+							Snapshot: expectedSnapshotNew,
 						},
 						storage.Blob{
 							Name:     "example.json",
@@ -49,8 +61,8 @@ var _ = Describe("Check", func() {
 				}
 			})
 
-			It("returns just the latest blob snapshot version", func() {
-				latestVersion, err := check.LatestVersion("example.json")
+			It("returns versions from current to latest for blob", func() {
+				latestVersions, err := check.VersionsSince("example.json", expectedSnapshotCurrent)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(azureClient.ListBlobsCall.CallCount).To(Equal(1))
@@ -58,21 +70,24 @@ var _ = Describe("Check", func() {
 					Prefix: "example.json",
 					Include: &storage.IncludeBlobDataset{
 						Snapshots: true,
-						Copy: true,
+						Copy:      true,
 					},
 				}))
-				Expect(latestVersion.Snapshot).To(Equal(&expectedSnapshot))
+				Expect(latestVersions).To(HaveLen(3))
+				Expect(latestVersions[0].Snapshot).To(Equal(&expectedSnapshotCurrent))
+				Expect(latestVersions[1].Snapshot).To(Equal(&expectedSnapshotNew))
+				Expect(latestVersions[2].Snapshot).To(Equal(&expectedSnapshotNewer))
 			})
 
 			Context("when an error occurs", func() {
 				Context("when the azure client fails to list blobs", func() {
 					BeforeEach(func() {
-						expectedSnapshot = time.Date(2017, time.January, 02, 01, 01, 01, 01, time.UTC)
+						expectedSnapshotCurrent = time.Date(2017, time.January, 02, 01, 01, 01, 01, time.UTC)
 						azureClient.ListBlobsCall.Returns.Error = errors.New("failed to list blobs")
 					})
 
 					It("returns an error", func() {
-						_, err := check.LatestVersion("example.json")
+						_, err := check.VersionsSince("example.json", time.Now())
 						Expect(err).To(MatchError("failed to list blobs"))
 					})
 				})
@@ -80,7 +95,7 @@ var _ = Describe("Check", func() {
 
 			Context("when the file is not found", func() {
 				It("returns an error", func() {
-					_, err := check.LatestVersion("non-existant.json")
+					_, err := check.VersionsSince("non-existant.json", time.Now())
 					Expect(err).To(MatchError("failed to find blob: non-existant.json"))
 				})
 			})

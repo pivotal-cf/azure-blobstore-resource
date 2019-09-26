@@ -31,22 +31,23 @@ func main() {
 	)
 	check := api.NewCheck(azureClient)
 
-	var version api.Version
+	var versions []api.Version
 	if checkRequest.Source.VersionedFile != "" {
-		version, err = check.LatestVersion(checkRequest.Source.VersionedFile)
+		versions, err = check.VersionsSince(checkRequest.Source.VersionedFile, checkRequest.Version.Snapshot)
 		if err != nil {
 			log.Fatal("failed to get latest version: ", err)
 		}
 	} else if checkRequest.Source.Regexp != "" {
-		version, err = check.LatestVersionRegexp(checkRequest.Source.Regexp)
+		version, err := check.LatestVersionRegexp(checkRequest.Source.Regexp)
 		if err != nil {
 			log.Fatal("failed to get latest version from regexp: ", err)
 		}
+		versions = []api.Version{version}
 	} else {
 		log.Fatal("must supply either versioned_file or regexp in source parameters", err)
 	}
 
-	versionsJSON, err := json.Marshal([]api.Version{version})
+	versionsJSON, err := json.Marshal(versions)
 	if err != nil {
 		log.Fatal("failed to marshal versions: ", err)
 	}

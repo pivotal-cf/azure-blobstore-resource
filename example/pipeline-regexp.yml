@@ -1,0 +1,44 @@
+resource_types:
+- name: azure-blobstore
+  type: docker-image
+  source:
+    repository: pcfabr/azure-blobstore-resource
+
+resources:
+  - name: azure-blobstore-resource
+    type: git
+    source:
+      uri: https://github.com/pivotal-cf/azure-blobstore-resource.git
+      branch: master
+
+  - name: configuration
+    type: azure-blobstore
+    source:
+      storage_account_name: ((storage_account_name))
+      storage_account_key: ((storage_account_key))
+      container: ((container))
+      regexp: my-file-(.*)
+
+jobs:
+- name: print-config
+  plan:
+  - in_parallel:
+    - get: azure-blobstore-resource
+    - get: configuration
+  - task: print-config
+    file: azure-blobstore-resource/example/tasks/print-config/task.yml
+    params:
+      CONFIGURATION_FILENAME: my-file-*
+
+- name: write-config
+  plan:
+  - in_parallel:
+    - get: azure-blobstore-resource
+  - task: write-config
+    file: azure-blobstore-resource/example/tasks/write-config/task.yml
+    params:
+      CONFIGURATION_FILENAME: my-file
+      APPEND_TIMESTAMP_ON_FILENAME: 1
+  - put: configuration
+    params:
+      file: configuration/my-file-*

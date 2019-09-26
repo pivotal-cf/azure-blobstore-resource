@@ -102,7 +102,7 @@ var _ = Describe("Check", func() {
 		})
 	})
 
-	Describe("LatestVersionRegexp", func() {
+	Describe("VersionsSinceRegexp", func() {
 		Context("given a regex pattern with semver blobs", func() {
 			BeforeEach(func() {
 				azureClient.ListBlobsCall.Returns.BlobListResponse = storage.BlobListResponse{
@@ -111,10 +111,16 @@ var _ = Describe("Check", func() {
 							Name: "example-1.0.0.json",
 						},
 						storage.Blob{
-							Name: "example-1.2.3.json",
+							Name: "example-0.1.0.json",
+						},
+						storage.Blob{
+							Name: "example-2.0.0.json",
 						},
 						storage.Blob{
 							Name: "example-1.2.0.json",
+						},
+						storage.Blob{
+							Name: "example-1.2.3.json",
 						},
 						storage.Blob{
 							Name: "foo.json",
@@ -123,8 +129,8 @@ var _ = Describe("Check", func() {
 				}
 			})
 
-			It("returns just the latest blob matching the regex pattern", func() {
-				latestVersion, err := check.LatestVersionRegexp("example-(.*).json")
+			It("returns all the blobs matching the regex pattern newer than given version", func() {
+				latestVersions, err := check.VersionsSinceRegexp("example-(.*).json", "1.2.0")
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(azureClient.ListBlobsCall.CallCount).To(Equal(1))
@@ -137,8 +143,13 @@ var _ = Describe("Check", func() {
 					},
 				}))
 
-				Expect(latestVersion.Path).To(Equal(stringPtr("example-1.2.3.json")))
-				Expect(latestVersion.Version).To(Equal(stringPtr("1.2.3")))
+				Expect(latestVersions).To(HaveLen(3))
+				Expect(latestVersions[0].Path).To(Equal(stringPtr("example-1.2.0.json")))
+				Expect(latestVersions[0].Version).To(Equal(stringPtr("1.2.0")))
+				Expect(latestVersions[1].Path).To(Equal(stringPtr("example-1.2.3.json")))
+				Expect(latestVersions[1].Version).To(Equal(stringPtr("1.2.3")))
+				Expect(latestVersions[2].Path).To(Equal(stringPtr("example-2.0.0.json")))
+				Expect(latestVersions[2].Version).To(Equal(stringPtr("2.0.0")))
 			})
 		})
 
@@ -162,11 +173,15 @@ var _ = Describe("Check", func() {
 				}
 			})
 
-			It("returns just the latest blob matching the regex pattern", func() {
-				latestVersion, err := check.LatestVersionRegexp("example-(.*).json")
+			It("returns all the blob matching the regex pattern newer than given version", func() {
+				latestVersions, err := check.VersionsSinceRegexp("example-(.*).json", "2")
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(latestVersion.Path).To(Equal(stringPtr("example-3.json")))
+				Expect(latestVersions).To(HaveLen(2))
+				Expect(latestVersions[0].Path).To(Equal(stringPtr("example-2.json")))
+				Expect(latestVersions[0].Version).To(Equal(stringPtr("2")))
+				Expect(latestVersions[1].Path).To(Equal(stringPtr("example-3.json")))
+				Expect(latestVersions[1].Version).To(Equal(stringPtr("3")))
 			})
 		})
 
@@ -191,18 +206,18 @@ var _ = Describe("Check", func() {
 			})
 
 			It("returns a version using the first group as the version", func() {
-				latestVersion, err := check.LatestVersionRegexp("example-.-(.*)-(.).json")
+				latestVersions, err := check.VersionsSinceRegexp("example-.-(.*)-(.).json", "")
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(latestVersion.Path).To(Equal(stringPtr("example-b-1.2.3-b.json")))
+				Expect(latestVersions[len(latestVersions)-1].Path).To(Equal(stringPtr("example-b-1.2.3-b.json")))
 			})
 
 			Context("when a group is named version", func() {
 				It("returns a version using the named group as the version", func() {
-					latestVersion, err := check.LatestVersionRegexp("example-(.)-(?P<version>.*)-..json")
+					latestVersions, err := check.VersionsSinceRegexp("example-(.)-(?P<version>.*)-..json", "")
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(latestVersion.Path).To(Equal(stringPtr("example-b-1.2.3-b.json")))
+					Expect(latestVersions[len(latestVersions)-1].Path).To(Equal(stringPtr("example-b-1.2.3-b.json")))
 				})
 			})
 		})
@@ -219,7 +234,7 @@ var _ = Describe("Check", func() {
 			})
 
 			It("returns a version using the first group as the version", func() {
-				_, err := check.LatestVersionRegexp("example-(.*).json")
+				_, err := check.VersionsSinceRegexp("example-(.*).json", "")
 				Expect(err).To(MatchError("no matching blob found for regexp: example-(.*).json"))
 			})
 		})
@@ -230,14 +245,14 @@ var _ = Describe("Check", func() {
 			})
 
 			It("returns an error", func() {
-				_, err := check.LatestVersionRegexp("example-(.*).json")
+				_, err := check.VersionsSinceRegexp("example-(.*).json", "")
 				Expect(err).To(MatchError("something bad happened"))
 			})
 		})
 
 		Context("when an invalid regex pattern is provided", func() {
 			It("returns an error", func() {
-				_, err := check.LatestVersionRegexp("example-(.json")
+				_, err := check.VersionsSinceRegexp("example-(.json", "")
 				Expect(err).To(MatchError("error parsing regexp: missing closing ): `example-(.json`"))
 			})
 		})
@@ -254,7 +269,7 @@ var _ = Describe("Check", func() {
 			})
 
 			It("returns an error", func() {
-				_, err := check.LatestVersionRegexp("example-(.*).json")
+				_, err := check.VersionsSinceRegexp("example-(.*).json", "")
 				Expect(err).To(MatchError("Expected version '%' to match version format"))
 			})
 		})

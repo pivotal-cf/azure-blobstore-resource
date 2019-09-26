@@ -71,6 +71,7 @@ var _ = Describe("Check", func() {
 
 			var versions []struct {
 				Path     *string    `json:"path"`
+				Version  *string    `json:"version"`
 				Snapshot *time.Time `json:"snapshot"`
 			}
 			err = json.Unmarshal(output, &versions)
@@ -78,10 +79,13 @@ var _ = Describe("Check", func() {
 
 			Expect(len(versions)).To(Equal(3))
 			Expect(versions[0].Path).To(BeNil())
+			Expect(versions[0].Version).To(BeNil())
 			Expect(versions[0].Snapshot).To(Equal(snapshotTimestampCurrent))
 			Expect(versions[1].Path).To(BeNil())
+			Expect(versions[1].Version).To(BeNil())
 			Expect(versions[1].Snapshot).To(Equal(snapshotTimestampNew))
 			Expect(versions[2].Path).To(BeNil())
+			Expect(versions[2].Version).To(BeNil())
 			Expect(versions[2].Snapshot).To(Equal(snapshotTimestampNewer))
 		})
 	})
@@ -117,6 +121,7 @@ var _ = Describe("Check", func() {
 
 			var versions []struct {
 				Path     *string    `json:"path"`
+				Version  *string    `json:"version"`
 				Snapshot *time.Time `json:"snapshot"`
 			}
 			err = json.Unmarshal(output, &versions)
@@ -125,6 +130,7 @@ var _ = Describe("Check", func() {
 			Expect(len(versions)).To(Equal(1))
 			Expect(versions[0].Snapshot).To(Equal(&time.Time{}))
 			Expect(versions[0].Path).To(BeNil())
+			Expect(versions[0].Version).To(BeNil())
 		})
 	})
 
@@ -164,9 +170,12 @@ var _ = Describe("Check", func() {
 	Context("when a regex pattern is provided", func() {
 		BeforeEach(func() {
 			createBlob(container, "example-1.2.3.json")
+			createBlob(container, "example-0.1.0.json")
+			createBlob(container, "example-1.2.4.json")
+			createBlob(container, "example-2.0.0.json")
 		})
 
-		It("returns just the latest version that matches the regexp", func() {
+		It("returns all versions since version that matches the regexp", func() {
 			check := exec.Command(pathToCheck)
 			check.Stderr = os.Stderr
 
@@ -180,7 +189,7 @@ var _ = Describe("Check", func() {
 						"container": %q,
 						"regexp": "example-(.*).json"
 					},
-					"version": { "path": "1.0.0" }
+					"version": { "version": "1.0.0" }
 				}`,
 				config.StorageAccountName,
 				config.StorageAccountKey,
@@ -193,14 +202,22 @@ var _ = Describe("Check", func() {
 
 			var versions []struct {
 				Path     *string    `json:"path"`
+				Version     *string    `json:"version"`
 				Snapshot *time.Time `json:"snapshot"`
 			}
 			err = json.Unmarshal(output, &versions)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(len(versions)).To(Equal(1))
+			Expect(len(versions)).To(Equal(3))
 			Expect(versions[0].Path).To(Equal(stringPtr("example-1.2.3.json")))
+			Expect(versions[0].Version).To(Equal(stringPtr("1.2.3")))
 			Expect(versions[0].Snapshot).To(BeNil())
+			Expect(versions[1].Path).To(Equal(stringPtr("example-1.2.4.json")))
+			Expect(versions[1].Version).To(Equal(stringPtr("1.2.4")))
+			Expect(versions[1].Snapshot).To(BeNil())
+			Expect(versions[2].Path).To(Equal(stringPtr("example-2.0.0.json")))
+			Expect(versions[2].Version).To(Equal(stringPtr("2.0.0")))
+			Expect(versions[2].Snapshot).To(BeNil())
 		})
 	})
 
@@ -209,7 +226,7 @@ var _ = Describe("Check", func() {
 			createBlob(container, "example-1.2.3.json")
 		})
 
-		It("returns just the latest version that matches the regexp which has been copied", func() {
+		It("returns only versions that matches the regexp which has been copied", func() {
 			copyBlob(container, "example-2.3.4.json", "http://example.com")
 
 			Eventually(func() *string {
@@ -226,7 +243,7 @@ var _ = Describe("Check", func() {
 						"container": %q,
 						"regexp": "example-(.*).json"
 					},
-					"version": { "path": "1.0.0" }
+					"version": { "version": "1.0.0" }
 				}`,
 					config.StorageAccountName,
 					config.StorageAccountKey,
@@ -243,7 +260,7 @@ var _ = Describe("Check", func() {
 				}
 				err = json.Unmarshal(output, &versions)
 				Expect(err).NotTo(HaveOccurred())
-				return versions[0].Path
+				return versions[len(versions)-1].Path
 			}, 10*time.Second, time.Second).Should(Equal(stringPtr("example-2.3.4.json")))
 		})
 
@@ -264,7 +281,7 @@ var _ = Describe("Check", func() {
 						"container": %q,
 						"regexp": "example-(.*).json"
 					},
-					"version": { "path": "1.0.0" }
+					"version": { "version": "1.0.0" }
 				}`,
 					config.StorageAccountName,
 					config.StorageAccountKey,

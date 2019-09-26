@@ -14,6 +14,8 @@ type Version struct {
 	Snapshot *time.Time `json:"snapshot,omitempty"`
 	Path     *string    `json:"path,omitempty"`
 	Version  *string    `json:"version,omitempty"`
+
+	comparableVersion version.Version
 }
 
 type Check struct {
@@ -45,9 +47,8 @@ func (c Check) VersionsSince(filename string, snapshot time.Time) ([]Version, er
 
 		if blob.Name == filename {
 			if blob.Snapshot.After(snapshot) || blob.Snapshot.Equal(snapshot) {
-				snapshot := blob.Snapshot
 				newerVersions = append(newerVersions, Version{
-					Snapshot: &snapshot,
+					Snapshot: timePtr(blob.Snapshot),
 				})
 			}
 			found = true
@@ -65,7 +66,7 @@ func (c Check) VersionsSince(filename string, snapshot time.Time) ([]Version, er
 	return newerVersions, nil
 }
 
-func (c Check) LatestVersionRegexp(expr string) (Version, error) {
+func (c Check) VersionsSinceRegexp(expr, currentVersion string) ([]Version, error) {
 	blobListResponse, err := c.azureClient.ListBlobs(storage.ListBlobsParameters{
 		Include: &storage.IncludeBlobDataset{
 			Snapshots: true,
@@ -73,16 +74,21 @@ func (c Check) LatestVersionRegexp(expr string) (Version, error) {
 		},
 	})
 	if err != nil {
-		return Version{}, err
+		return []Version{}, err
 	}
 
 	matcher, err := regexp.Compile(expr)
 	if err != nil {
-		return Version{}, err
+		return []Version{}, err
 	}
 
-	var latestVersion version.Version
-	var latestBlobName string
+	curVersion, err := version.NewVersionFromString(currentVersion)
+	if err != nil {
+		// ignored, if currentVersion could not be converted to a version we will
+		// assume every version is newer
+	}
+
+	var newerVersions []Version
 	for _, blob := range blobListResponse.Blobs {
 		if blob.Properties.CopyStatus != "" && blob.Properties.CopyStatus != "success" {
 			continue // skip blobs which are still being copied
@@ -104,24 +110,27 @@ func (c Check) LatestVersionRegexp(expr string) (Version, error) {
 
 		ver, err := version.NewVersionFromString(match)
 		if err != nil {
-			return Version{}, err
+			return []Version{}, err
 		}
 
-		if ver.Compare(latestVersion) >= 0 {
-			latestVersion = ver
-			latestBlobName = blob.Name
+		if currentVersion == "" || ver.Compare(curVersion) >= 0 {
+			newerVersions = append(newerVersions, Version{
+				Path:              stringPtr(blob.Name),
+				Version:           stringPtr(ver.AsString()),
+				comparableVersion: ver,
+			})
 		}
 	}
 
-	if latestBlobName == "" {
-		return Version{}, fmt.Errorf("no matching blob found for regexp: %s", expr)
+	if len(newerVersions) == 0 {
+		return []Version{}, fmt.Errorf("no matching blob found for regexp: %s", expr)
 	}
 
-	version := latestVersion.AsString()
-	return Version{
-		Path:    &latestBlobName,
-		Version: &version,
-	}, nil
+	sort.Slice(newerVersions, func(i, j int) bool {
+		return newerVersions[i].comparableVersion.Compare(newerVersions[j].comparableVersion) < 0
+	})
+
+	return newerVersions, nil
 }
 
 func findString(items []string, searchFor string) (int, bool) {
@@ -132,4 +141,12 @@ func findString(items []string, searchFor string) (int, bool) {
 	}
 
 	return -1, false
+}
+
+func stringPtr(str string) *string {
+	return &str
+}
+
+func timePtr(t time.Time) *time.Time {
+	return &t
 }

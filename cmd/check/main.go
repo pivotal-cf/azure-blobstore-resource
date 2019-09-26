@@ -38,11 +38,10 @@ func main() {
 			log.Fatal("failed to get latest version: ", err)
 		}
 	} else if checkRequest.Source.Regexp != "" {
-		version, err := check.LatestVersionRegexp(checkRequest.Source.Regexp)
+		versions, err = check.VersionsSinceRegexp(checkRequest.Source.Regexp, checkRequest.Version.Version)
 		if err != nil {
 			log.Fatal("failed to get latest version from regexp: ", err)
 		}
-		versions = []api.Version{version}
 	} else {
 		log.Fatal("must supply either versioned_file or regexp in source parameters", err)
 	}

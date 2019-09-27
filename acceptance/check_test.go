@@ -165,6 +165,59 @@ var _ = Describe("Check", func() {
 
 			Expect(stderr.String()).To(ContainSubstring("failed to find blob: example.json"))
 		})
+
+		Context("when the initial_version is provided with", func() {
+			var (
+				initialVersionTime *time.Time
+			)
+
+			BeforeEach(func() {
+				initialVersionTime = timePtr(time.Date(2017, time.January, 02, 01, 01, 01, 01, time.UTC))
+			})
+
+			It("returns the initial_version as the version", func() {
+				check := exec.Command(pathToCheck)
+				check.Stderr = os.Stderr
+
+				stdin, err := check.StdinPipe()
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = io.WriteString(stdin, fmt.Sprintf(`{
+						"source": {
+							"storage_account_name": %q,
+							"storage_account_key": %q,
+							"container": %q,
+							"versioned_file": "example.json"
+						},
+						"params": {
+							"initial_version": %q
+						},
+						"version": { "snapshot": "2017-08-08T23:27:16.2942812Z" }
+					}`,
+					config.StorageAccountName,
+					config.StorageAccountKey,
+					container,
+					initialVersionTime.Format(time.RFC3339Nano),
+				))
+				Expect(err).NotTo(HaveOccurred())
+
+				output, err := check.Output()
+				Expect(err).NotTo(HaveOccurred())
+
+				var versions []struct {
+					Path     *string    `json:"path"`
+					Version  *string    `json:"version"`
+					Snapshot *time.Time `json:"snapshot"`
+				}
+				err = json.Unmarshal(output, &versions)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(len(versions)).To(Equal(1))
+				Expect(versions[0].Snapshot).To(Equal(initialVersionTime))
+				Expect(versions[0].Path).To(BeNil())
+				Expect(versions[0].Version).To(BeNil())
+			})
+		})
 	})
 
 	Context("when a regex pattern is provided", func() {
@@ -202,7 +255,7 @@ var _ = Describe("Check", func() {
 
 			var versions []struct {
 				Path     *string    `json:"path"`
-				Version     *string    `json:"version"`
+				Version  *string    `json:"version"`
 				Snapshot *time.Time `json:"snapshot"`
 			}
 			err = json.Unmarshal(output, &versions)
@@ -305,5 +358,9 @@ var _ = Describe("Check", func() {
 })
 
 func stringPtr(value string) *string {
+	return &value
+}
+
+func timePtr(value time.Time) *time.Time {
 	return &value
 }

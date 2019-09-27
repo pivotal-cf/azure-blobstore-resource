@@ -2,8 +2,9 @@ package api_test
 
 import (
 	"errors"
-	"github.com/pivotal-cf/azure-blobstore-resource/azure/azurefakes"
 	"time"
+
+	"github.com/pivotal-cf/azure-blobstore-resource/azure/azurefakes"
 
 	"github.com/Azure/azure-sdk-for-go/storage"
 	. "github.com/onsi/ginkgo"
@@ -61,7 +62,7 @@ var _ = Describe("Check", func() {
 			})
 
 			It("returns versions from current to latest for blob", func() {
-				latestVersions, err := check.VersionsSince("example.json", expectedSnapshotCurrent)
+				latestVersions, err := check.VersionsSince("example.json", expectedSnapshotCurrent, nil)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(azureClient.ListBlobsCallCount()).To(Equal(1))
@@ -79,7 +80,6 @@ var _ = Describe("Check", func() {
 			})
 
 			Context("with pagination", func() {
-
 				BeforeEach(func() {
 
 					expectedSnapshotCurrent = time.Date(2017, time.January, 02, 01, 01, 01, 01, time.UTC)
@@ -119,7 +119,7 @@ var _ = Describe("Check", func() {
 				})
 
 				It("returns versions from current to latest for blob", func() {
-					latestVersions, err := check.VersionsSince("example.json", expectedSnapshotCurrent)
+					latestVersions, err := check.VersionsSince("example.json", expectedSnapshotCurrent, nil)
 					Expect(err).NotTo(HaveOccurred())
 
 					Expect(azureClient.ListBlobsCallCount()).To(Equal(2))
@@ -144,7 +144,24 @@ var _ = Describe("Check", func() {
 					Expect(latestVersions[1].Snapshot).To(Equal(&expectedSnapshotNew))
 					Expect(latestVersions[2].Snapshot).To(Equal(&expectedSnapshotNewer))
 				})
+			})
 
+			Context("when the initial_version is set and no blobs exist", func() {
+				var (
+					initialVersion time.Time
+				)
+
+				BeforeEach(func() {
+					initialVersion = time.Date(2017, time.January, 01, 01, 01, 01, 01, time.UTC)
+				})
+
+				It("returns the initial version as the version", func() {
+					latestVersions, err := check.VersionsSince("non-existant.json", expectedSnapshotCurrent, &initialVersion)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(latestVersions).To(HaveLen(1))
+					Expect(latestVersions[0].Snapshot).To(Equal(&initialVersion))
+				})
 			})
 
 			Context("when an error occurs", func() {
@@ -155,7 +172,7 @@ var _ = Describe("Check", func() {
 					})
 
 					It("returns an error", func() {
-						_, err := check.VersionsSince("example.json", time.Now())
+						_, err := check.VersionsSince("example.json", time.Now(), nil)
 						Expect(err).To(MatchError("failed to list blobs"))
 					})
 				})
@@ -163,7 +180,7 @@ var _ = Describe("Check", func() {
 
 			Context("when the file is not found", func() {
 				It("returns an error", func() {
-					_, err := check.VersionsSince("non-existant.json", time.Now())
+					_, err := check.VersionsSince("non-existant.json", time.Now(), nil)
 					Expect(err).To(MatchError("failed to find blob: non-existant.json"))
 				})
 			})

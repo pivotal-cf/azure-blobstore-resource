@@ -33,7 +33,7 @@ func main() {
 
 	var versions []api.Version
 	if checkRequest.Source.VersionedFile != "" {
-		versions, err = check.VersionsSince(checkRequest.Source.VersionedFile, checkRequest.Version.Snapshot)
+		versions, err = check.VersionsSince(checkRequest.Source.VersionedFile, checkRequest.Version.Snapshot, checkRequest.Params.InitialVersion)
 		if err != nil {
 			log.Fatal("failed to get latest version: ", err)
 		}

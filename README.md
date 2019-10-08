@@ -55,6 +55,12 @@ Places the following files in the destination:
 * `unpack`: *Optional.* If true, the blob will be unpacked before running the task. Supports
   tar, zip, gzip files.
 
+* `block_size`: *Optional.* Changes the block size used when uploading to Azure.
+  Defaults to 4 MB. Maximum block size is 100 MB. A blob can include up to 50,000
+  blocks. This means with the default of 4 MB, blobs are limited to a size of a
+  little more than 195 GB (4 MB x 50000 blocks). The max size of a blob with a
+  block size of 100 MB will be 4.75 TB (100 MB x 50000 blocks).
+
 ### `out`: Upload a blob to the container.
 
 Uploads a file to the container. If `regexp` is specified, the new file will be uploaded

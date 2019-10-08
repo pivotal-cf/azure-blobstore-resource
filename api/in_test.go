@@ -47,22 +47,24 @@ var _ = Describe("In", func() {
 		})
 
 		It("copies blob from azure blobstore to local destination directory", func() {
-			err := in.CopyBlobToDestination(tempDir, "example.json", snapshot)
+			err := in.CopyBlobToDestination(tempDir, "example.json", snapshot, 1)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(azureClient.DownloadBlobToFileCall.CallCount).To(Equal(1))
 			Expect(azureClient.DownloadBlobToFileCall.Receives[0].BlobName).To(Equal("example.json"))
 			Expect(azureClient.DownloadBlobToFileCall.Receives[0].FileName).To(Equal("example.json"))
+			Expect(azureClient.DownloadBlobToFileCall.Receives[0].BlockSize).To(Equal(int64(1)))
 		})
 
 		Context("when a sub directory is specified within destination", func() {
 			It("does not create the sub directories (matches s3 resource implementation)", func() {
-				err := in.CopyBlobToDestination(tempDir, "./sub/dir/example.json", snapshot)
+				err := in.CopyBlobToDestination(tempDir, "./sub/dir/example.json", snapshot, 1)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(azureClient.DownloadBlobToFileCall.CallCount).To(Equal(1))
 				Expect(azureClient.DownloadBlobToFileCall.Receives[0].BlobName).To(Equal("./sub/dir/example.json"))
 				Expect(azureClient.DownloadBlobToFileCall.Receives[0].FileName).To(Equal("example.json"))
+				Expect(azureClient.DownloadBlobToFileCall.Receives[0].BlockSize).To(Equal(int64(1)))
 			})
 		})
 
@@ -70,7 +72,7 @@ var _ = Describe("In", func() {
 			Context("when azure client fails to get a blob", func() {
 				It("returns an error", func() {
 					azureClient.DownloadBlobToFileCall.Returns.Error = errors.New("failed to get blob")
-					err := in.CopyBlobToDestination(tempDir, "example.json", snapshot)
+					err := in.CopyBlobToDestination(tempDir, "example.json", snapshot, 1)
 					Expect(err).To(MatchError("failed to get blob"))
 				})
 			})

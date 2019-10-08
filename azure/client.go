@@ -112,7 +112,7 @@ func (c Client) Get(blobName string, snapshot time.Time) ([]byte, error) {
 }
 
 // DownloadBlobToFile download specified blobName to specified file
-func (c Client) DownloadBlobToFile(blobName string, file *os.File) error {
+func (c Client) DownloadBlobToFile(blobName string, file *os.File, blockSize int64) error {
 
 	u, err := url.Parse(fmt.Sprintf("https://%s.blob.%s/%s/%s",
 		c.storageAccountName, c.baseURL, c.container, blobName))
@@ -131,7 +131,9 @@ func (c Client) DownloadBlobToFile(blobName string, file *os.File) error {
 
 	// todo: investigate use of parallelism in options and also retrying downloading of blocks sounds promising
 	// as i've seen large downloads (pas tile) fail 80% of the way..
-	return azblob.DownloadBlobToFile(ctx, blobURL, 0, 0, file, azblob.DownloadFromBlobOptions{})
+	return azblob.DownloadBlobToFile(ctx, blobURL, 0, 0, file, azblob.DownloadFromBlobOptions{
+		BlockSize: blockSize,
+	})
 }
 
 // UploadFromStream adapted from https://godoc.org/github.com/Azure/azure-storage-blob-go/azblob#example-UploadStreamToBlockBlob

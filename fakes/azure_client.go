@@ -83,8 +83,9 @@ type AzureClient struct {
 }
 
 type DownloadBlobToFileReceives struct {
-	BlobName string
-	FileName string
+	BlobName  string
+	FileName  string
+	BlockSize int64
 }
 
 func (a *AzureClient) ListBlobs(params storage.ListBlobsParameters) (storage.BlobListResponse, error) {
@@ -107,11 +108,12 @@ func (a *AzureClient) Get(blobName string, snapshot time.Time) ([]byte, error) {
 	return a.GetCall.Returns.BlobData, a.GetCall.Returns.Error
 }
 
-func (a *AzureClient) DownloadBlobToFile(blobName string, file *os.File) error {
+func (a *AzureClient) DownloadBlobToFile(blobName string, file *os.File, blockSize int64) error {
 	a.DownloadBlobToFileCall.CallCount++
 	a.DownloadBlobToFileCall.Receives = append(a.DownloadBlobToFileCall.Receives, DownloadBlobToFileReceives{
-		BlobName: blobName,
-		FileName: path.Base(file.Name()),
+		BlobName:  blobName,
+		FileName:  path.Base(file.Name()),
+		BlockSize: blockSize,
 	})
 	return a.DownloadBlobToFileCall.Returns.Error
 }

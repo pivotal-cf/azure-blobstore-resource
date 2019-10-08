@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/storage"
+	"github.com/Azure/azure-storage-blob-go/azblob"
 	"github.com/pivotal-cf/azure-blobstore-resource/api"
 	"github.com/pivotal-cf/azure-blobstore-resource/azure"
 )
@@ -46,11 +47,17 @@ func main() {
 		versionPath = inRequest.Version.Path
 	}
 
+	blockSize := azblob.BlobDefaultDownloadBlockSize
+	if inRequest.Params.BlockSize != nil {
+		blockSize = *inRequest.Params.BlockSize
+	}
+
 	if !inRequest.Params.SkipDownload {
 		err = in.CopyBlobToDestination(
 			destinationDirectory,
 			blobName,
 			snapshot,
+			blockSize,
 		)
 		if err != nil {
 			log.Fatal("failed to copy blob: ", err)

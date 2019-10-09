@@ -35,5 +35,6 @@ type InParams struct {
 }
 
 type OutParams struct {
-	File string `json:"file"`
+	File      string `json:"file"`
+	BlockSize *int   `json:"block_size,omitempty"`
 }

@@ -17,7 +17,7 @@ func NewOut(azureClient azureClient) Out {
 	}
 }
 
-func (o Out) UploadFileToBlobstore(sourceDirectory string, filename string, blobName string, createSnapshot bool) (string, time.Time, error) {
+func (o Out) UploadFileToBlobstore(sourceDirectory string, filename string, blobName string, createSnapshot bool, blockSize int) (string, time.Time, error) {
 	matches, err := filepath.Glob(filepath.Join(sourceDirectory, filename))
 	if err != nil {
 		// not tested
@@ -42,7 +42,7 @@ func (o Out) UploadFileToBlobstore(sourceDirectory string, filename string, blob
 	}
 	defer file.Close()
 
-	err = o.azureClient.UploadFromStream(blobName, file)
+	err = o.azureClient.UploadFromStream(blobName, blockSize, file)
 	if err != nil {
 		return "", time.Time{}, err
 	}

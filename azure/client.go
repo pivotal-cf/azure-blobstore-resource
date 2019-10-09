@@ -137,7 +137,7 @@ func (c Client) DownloadBlobToFile(blobName string, file *os.File, blockSize int
 }
 
 // UploadFromStream adapted from https://godoc.org/github.com/Azure/azure-storage-blob-go/azblob#example-UploadStreamToBlockBlob
-func (c Client) UploadFromStream(blobName string, stream io.Reader) error {
+func (c Client) UploadFromStream(blobName string, blockSize int, stream io.Reader) error {
 
 	u, err := url.Parse(fmt.Sprintf("https://%s.blob.%s/%s/%s",
 		c.storageAccountName, c.baseURL, c.container, blobName))
@@ -155,7 +155,7 @@ func (c Client) UploadFromStream(blobName string, stream io.Reader) error {
 	ctx := context.Background()
 
 	_, err = azblob.UploadStreamToBlockBlob(ctx, stream, blockBlobURL,
-		azblob.UploadStreamToBlockBlobOptions{BufferSize: ChunkSize, MaxBuffers: 3})
+		azblob.UploadStreamToBlockBlobOptions{BufferSize: blockSize, MaxBuffers: 3})
 
 	return err
 }

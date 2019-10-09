@@ -55,11 +55,11 @@ Places the following files in the destination:
 * `unpack`: *Optional.* If true, the blob will be unpacked before running the task. Supports
   tar, zip, gzip files.
 
-* `block_size`: *Optional.* Changes the block size used when uploading to Azure.
-  Defaults to 4 MB. Maximum block size is 100 MB. A blob can include up to 50,000
-  blocks. This means with the default of 4 MB, blobs are limited to a size of a
-  little more than 195 GB (4 MB x 50000 blocks). The max size of a blob with a
-  block size of 100 MB will be 4.75 TB (100 MB x 50000 blocks).
+* `block_size`: *Optional.* Changes the block size used when downloading from
+  Azure.  Defaults to 4 MB. Maximum block size is 100 MB. A blob can include up
+  to 50,000 blocks. This means with the default of 4 MB, blobs are limited to a
+  size of a little more than 195 GB (4 MB x 50000 blocks). The max size of a
+  blob with a block size of 100 MB will be 4.75 TB (100 MB x 50000 blocks).
 
 ### `out`: Upload a blob to the container.
 
@@ -73,6 +73,12 @@ new file will be uploaded as a new snapshot of that file.
   files are matched by the glob, an error is raised. The file that matches the glob will be
   uploaded into the directory specified by the regexp. Only supports bash glob expansion, not
   regex.
+
+* `block_size`: *Optional.* Changes the block size used when uploading to Azure.
+  Defaults to 4 MB. Maximum block size is 100 MB. A blob can include up to
+  50,000 blocks. This means with the default of 4 MB, blobs are limited to a
+  size of a little more than 195 GB (4 MB x 50000 blocks). The max size of a
+  blob with a block size of 100 MB will be 4.75 TB (100 MB x 50000 blocks).
 
 ## Example Configuration
 

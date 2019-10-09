@@ -12,6 +12,10 @@ import (
 	"github.com/pivotal-cf/azure-blobstore-resource/azure"
 )
 
+const (
+	BlobDefaultUploadBlockSize = 4 * 1024 * 1024 // 4 MB
+)
+
 func main() {
 	sourceDirectory := os.Args[1]
 
@@ -45,11 +49,17 @@ func main() {
 		blobName = filepath.Join(blobPath, blobBaseName)
 	}
 
+	blockSize := BlobDefaultUploadBlockSize
+	if outRequest.Params.BlockSize != nil {
+		blockSize = *outRequest.Params.BlockSize
+	}
+
 	path, snapshot, err := out.UploadFileToBlobstore(
 		sourceDirectory,
 		outRequest.Params.File,
 		blobName,
 		createSnapshot,
+		blockSize,
 	)
 	if err != nil {
 		log.Fatal("failed to upload blob: ", err)

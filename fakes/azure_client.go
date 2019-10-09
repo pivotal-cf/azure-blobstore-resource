@@ -53,8 +53,9 @@ type AzureClient struct {
 		CallCount int
 		Stub      func(string, io.Reader) error
 		Receives  struct {
-			BlobName string
-			Stream   io.Reader
+			BlobName  string
+			BlockSize int
+			Stream    io.Reader
 		}
 		Returns struct {
 			Error error
@@ -118,9 +119,10 @@ func (a *AzureClient) DownloadBlobToFile(blobName string, file *os.File, blockSi
 	return a.DownloadBlobToFileCall.Returns.Error
 }
 
-func (a *AzureClient) UploadFromStream(blobName string, stream io.Reader) error {
+func (a *AzureClient) UploadFromStream(blobName string, blockSize int, stream io.Reader) error {
 	a.UploadFromStreamCall.CallCount++
 	a.UploadFromStreamCall.Receives.BlobName = blobName
+	a.UploadFromStreamCall.Receives.BlockSize = blockSize
 	a.UploadFromStreamCall.Receives.Stream = stream
 
 	if a.UploadFromStreamCall.Stub != nil {

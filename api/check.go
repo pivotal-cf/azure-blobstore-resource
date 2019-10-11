@@ -27,20 +27,36 @@ func NewCheck(azureClient azureClient) Check {
 }
 
 func (c Check) VersionsSince(filename string, snapshot time.Time) ([]Version, error) {
-	blobListResponse, err := c.azureClient.ListBlobs(storage.ListBlobsParameters{
-		Prefix: filename,
-		Include: &storage.IncludeBlobDataset{
-			Snapshots: true,
-			Copy:      true,
-		},
-	})
-	if err != nil {
-		return []Version{}, err
+	blobs := []storage.Blob{}
+	marker := ""
+
+	for {
+		blobListResponse, err := c.azureClient.ListBlobs(storage.ListBlobsParameters{
+			Prefix: filename,
+			Include: &storage.IncludeBlobDataset{
+				Snapshots: true,
+				Copy:      true,
+			},
+			Marker: marker,
+		})
+
+		if err != nil {
+			return []Version{}, err
+		}
+
+		for _, blob := range blobListResponse.Blobs {
+			blobs = append(blobs, blob)
+		}
+
+		marker = blobListResponse.NextMarker
+		if marker == "" {
+			break
+		}
 	}
 
 	var newerVersions []Version
 	var found bool
-	for _, blob := range blobListResponse.Blobs {
+	for _, blob := range blobs {
 		if blob.Properties.CopyStatus != "" && blob.Properties.CopyStatus != "success" {
 			continue // skip blobs which are still being copied
 		}
@@ -67,14 +83,30 @@ func (c Check) VersionsSince(filename string, snapshot time.Time) ([]Version, er
 }
 
 func (c Check) VersionsSinceRegexp(expr, currentVersion string) ([]Version, error) {
-	blobListResponse, err := c.azureClient.ListBlobs(storage.ListBlobsParameters{
-		Include: &storage.IncludeBlobDataset{
-			Snapshots: true,
-			Copy:      true,
-		},
-	})
-	if err != nil {
-		return []Version{}, err
+	blobs := []storage.Blob{}
+	marker := ""
+
+	for {
+		blobListResponse, err := c.azureClient.ListBlobs(storage.ListBlobsParameters{
+			Include: &storage.IncludeBlobDataset{
+				Snapshots: true,
+				Copy:      true,
+			},
+			Marker: marker,
+		})
+
+		if err != nil {
+			return []Version{}, err
+		}
+
+		for _, blob := range blobListResponse.Blobs {
+			blobs = append(blobs, blob)
+		}
+
+		marker = blobListResponse.NextMarker
+		if marker == "" || len(blobListResponse.Blobs) == 0 {
+			break
+		}
 	}
 
 	matcher, err := regexp.Compile(expr)
@@ -89,7 +121,7 @@ func (c Check) VersionsSinceRegexp(expr, currentVersion string) ([]Version, erro
 	}
 
 	var newerVersions []Version
-	for _, blob := range blobListResponse.Blobs {
+	for _, blob := range blobs {
 		if blob.Properties.CopyStatus != "" && blob.Properties.CopyStatus != "success" {
 			continue // skip blobs which are still being copied
 		}

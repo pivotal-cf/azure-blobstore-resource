@@ -78,6 +78,75 @@ var _ = Describe("Check", func() {
 				Expect(latestVersions[2].Snapshot).To(Equal(&expectedSnapshotNewer))
 			})
 
+			Context("with pagination", func() {
+
+				BeforeEach(func() {
+
+					expectedSnapshotCurrent = time.Date(2017, time.January, 02, 01, 01, 01, 01, time.UTC)
+					expectedSnapshotNew = time.Date(2017, time.January, 03, 01, 01, 01, 01, time.UTC)
+					expectedSnapshotNewer = time.Date(2017, time.January, 04, 01, 01, 01, 01, time.UTC)
+
+					azureClient.ListBlobsReturnsOnCall(0, storage.BlobListResponse{
+						Blobs: []storage.Blob{
+							storage.Blob{
+								Name:     "example.json",
+								Snapshot: time.Date(2017, time.January, 01, 01, 01, 01, 01, time.UTC),
+							},
+							storage.Blob{
+								Name:     "example.json",
+								Snapshot: expectedSnapshotCurrent,
+							},
+							storage.Blob{
+								Name:     "example.json",
+								Snapshot: expectedSnapshotNew,
+							},
+							storage.Blob{
+								Name:     "example.json",
+								Snapshot: time.Date(0001, time.January, 01, 0, 0, 0, 0, time.UTC),
+							},
+						},
+						NextMarker: "whatever",
+					}, nil)
+
+					azureClient.ListBlobsReturnsOnCall(1, storage.BlobListResponse{
+						Blobs: []storage.Blob{
+							storage.Blob{
+								Name:     "example.json",
+								Snapshot: expectedSnapshotNewer,
+							},
+						},
+					}, nil)
+				})
+
+				It("returns versions from current to latest for blob", func() {
+					latestVersions, err := check.VersionsSince("example.json", expectedSnapshotCurrent)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(azureClient.ListBlobsCallCount()).To(Equal(2))
+					Expect(azureClient.ListBlobsArgsForCall(0)).To(Equal(storage.ListBlobsParameters{
+						Prefix: "example.json",
+						Include: &storage.IncludeBlobDataset{
+							Snapshots: true,
+							Copy:      true,
+						},
+					}))
+					Expect(azureClient.ListBlobsArgsForCall(1)).To(Equal(storage.ListBlobsParameters{
+						Prefix: "example.json",
+						Include: &storage.IncludeBlobDataset{
+							Snapshots: true,
+							Copy:      true,
+						},
+						Marker: "whatever",
+					}))
+
+					Expect(latestVersions).To(HaveLen(3))
+					Expect(latestVersions[0].Snapshot).To(Equal(&expectedSnapshotCurrent))
+					Expect(latestVersions[1].Snapshot).To(Equal(&expectedSnapshotNew))
+					Expect(latestVersions[2].Snapshot).To(Equal(&expectedSnapshotNewer))
+				})
+
+			})
+
 			Context("when an error occurs", func() {
 				Context("when the azure client fails to list blobs", func() {
 					BeforeEach(func() {
@@ -186,7 +255,7 @@ var _ = Describe("Check", func() {
 
 		Context("given a regex pattern with multiple groups", func() {
 			BeforeEach(func() {
-				azureClient.ListBlobsReturnsOnCall(0 , storage.BlobListResponse{
+				azureClient.ListBlobsReturnsOnCall(0, storage.BlobListResponse{
 					Blobs: []storage.Blob{
 						storage.Blob{
 							Name: "example-a-1.0.0-a.json",
@@ -235,6 +304,71 @@ var _ = Describe("Check", func() {
 			It("returns a version using the first group as the version", func() {
 				_, err := check.VersionsSinceRegexp("example-(.*).json", "")
 				Expect(err).To(MatchError("no matching blob found for regexp: example-(.*).json"))
+			})
+		})
+
+		Context("with pagination", func() {
+			BeforeEach(func() {
+				azureClient.ListBlobsReturnsOnCall(0, storage.BlobListResponse{
+					Blobs: []storage.Blob{
+						storage.Blob{
+							Name: "example-1.0.0.json",
+						},
+						storage.Blob{
+							Name: "example-0.1.0.json",
+						},
+						storage.Blob{
+							Name: "example-2.0.0.json",
+						},
+						storage.Blob{
+							Name: "example-1.2.0.json",
+						},
+						storage.Blob{
+							Name: "foo.json",
+						},
+					},
+					NextMarker: "whatever",
+				}, nil)
+
+				azureClient.ListBlobsReturnsOnCall(1, storage.BlobListResponse{
+					Blobs: []storage.Blob{
+						storage.Blob{
+							Name: "example-1.2.3.json",
+						},
+					},
+				}, nil)
+			})
+
+			It("returns all the blobs matching the regex pattern newer than given version", func() {
+				latestVersions, err := check.VersionsSinceRegexp("example-(.*).json", "1.2.0")
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(azureClient.ListBlobsCallCount()).To(Equal(2))
+				Expect(azureClient.ListBlobsArgsForCall(0)).To(Equal(storage.ListBlobsParameters{
+					Include: &storage.IncludeBlobDataset{
+						Snapshots:        true,
+						Metadata:         false,
+						UncommittedBlobs: false,
+						Copy:             true,
+					},
+				}))
+				Expect(azureClient.ListBlobsArgsForCall(1)).To(Equal(storage.ListBlobsParameters{
+					Include: &storage.IncludeBlobDataset{
+						Snapshots:        true,
+						Metadata:         false,
+						UncommittedBlobs: false,
+						Copy:             true,
+					},
+					Marker: "whatever",
+				}))
+
+				Expect(latestVersions).To(HaveLen(3))
+				Expect(latestVersions[0].Path).To(Equal(stringPtr("example-1.2.0.json")))
+				Expect(latestVersions[0].Version).To(Equal(stringPtr("1.2.0")))
+				Expect(latestVersions[1].Path).To(Equal(stringPtr("example-1.2.3.json")))
+				Expect(latestVersions[1].Version).To(Equal(stringPtr("1.2.3")))
+				Expect(latestVersions[2].Path).To(Equal(stringPtr("example-2.0.0.json")))
+				Expect(latestVersions[2].Version).To(Equal(stringPtr("2.0.0")))
 			})
 		})
 

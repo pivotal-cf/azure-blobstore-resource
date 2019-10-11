@@ -3,13 +3,14 @@ package api_test
 import (
 	"errors"
 	"fmt"
+	"github.com/pivotal-cf/azure-blobstore-resource/azure/azurefakes"
 	"io"
 	"io/ioutil"
+	"path"
 	"path/filepath"
 	"time"
 
 	"github.com/pivotal-cf/azure-blobstore-resource/api"
-	"github.com/pivotal-cf/azure-blobstore-resource/fakes"
 
 	"os"
 
@@ -20,14 +21,14 @@ import (
 
 var _ = Describe("In", func() {
 	var (
-		azureClient *fakes.AzureClient
+		azureClient *azurefakes.FakeAzureClient
 		in          api.In
 
 		tempDir string
 	)
 
 	BeforeEach(func() {
-		azureClient = &fakes.AzureClient{}
+		azureClient = &azurefakes.FakeAzureClient{}
 		in = api.NewIn(azureClient)
 
 		var err error
@@ -43,17 +44,19 @@ var _ = Describe("In", func() {
 		BeforeEach(func() {
 			snapshot = time.Date(2017, time.January, 01, 01, 01, 01, 01, time.UTC)
 
-			azureClient.GetBlobSizeInBytesCall.Returns.BlobSize = api.ChunkSize*2 + 50
+			azureClient.GetBlobSizeInBytesReturns(api.ChunkSize*2 + 50, nil)
 		})
 
 		It("copies blob from azure blobstore to local destination directory", func() {
 			err := in.CopyBlobToDestination(tempDir, "example.json", snapshot, 1)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(azureClient.DownloadBlobToFileCall.CallCount).To(Equal(1))
-			Expect(azureClient.DownloadBlobToFileCall.Receives[0].BlobName).To(Equal("example.json"))
-			Expect(azureClient.DownloadBlobToFileCall.Receives[0].FileName).To(Equal("example.json"))
-			Expect(azureClient.DownloadBlobToFileCall.Receives[0].BlockSize).To(Equal(int64(1)))
+			Expect(azureClient.DownloadBlobToFileCallCount()).To(Equal(1))
+
+			blobName, file, blockSize := azureClient.DownloadBlobToFileArgsForCall(0)
+			Expect(blobName).To(Equal("example.json"))
+			Expect(path.Base(file.Name())).To(Equal("example.json"))
+			Expect(blockSize).To(Equal(int64(1)))
 		})
 
 		Context("when a sub directory is specified within destination", func() {
@@ -61,17 +64,19 @@ var _ = Describe("In", func() {
 				err := in.CopyBlobToDestination(tempDir, "./sub/dir/example.json", snapshot, 1)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(azureClient.DownloadBlobToFileCall.CallCount).To(Equal(1))
-				Expect(azureClient.DownloadBlobToFileCall.Receives[0].BlobName).To(Equal("./sub/dir/example.json"))
-				Expect(azureClient.DownloadBlobToFileCall.Receives[0].FileName).To(Equal("example.json"))
-				Expect(azureClient.DownloadBlobToFileCall.Receives[0].BlockSize).To(Equal(int64(1)))
+				Expect(azureClient.DownloadBlobToFileCallCount()).To(Equal(1))
+
+				blobName, file, blockSize := azureClient.DownloadBlobToFileArgsForCall(0)
+				Expect(blobName).To(Equal("./sub/dir/example.json"))
+				Expect(path.Base(file.Name())).To(Equal("example.json"))
+				Expect(blockSize).To(Equal(int64(1)))
 			})
 		})
 
 		Context("when an error occurs", func() {
 			Context("when azure client fails to get a blob", func() {
 				It("returns an error", func() {
-					azureClient.DownloadBlobToFileCall.Returns.Error = errors.New("failed to get blob")
+					azureClient.DownloadBlobToFileReturns(errors.New("failed to get blob"))
 					err := in.CopyBlobToDestination(tempDir, "example.json", snapshot, 1)
 					Expect(err).To(MatchError("failed to get blob"))
 				})

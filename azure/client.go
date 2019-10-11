@@ -17,6 +17,17 @@ const (
 	ChunkSize = 4000000 // 4Mb
 )
 
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . AzureClient
+type AzureClient interface {
+	ListBlobs(params storage.ListBlobsParameters) (storage.BlobListResponse, error)
+	GetBlobSizeInBytes(blobName string, snapshot time.Time) (int64, error)
+	Get(blobName string, snapshot time.Time) ([]byte, error)
+	DownloadBlobToFile(blobName string, file *os.File, blockSize int64) error
+	UploadFromStream(blobName string, blockSize int, stream io.Reader) error
+	CreateSnapshot(blobName string) (time.Time, error)
+	GetBlobURL(blobName string) (string, error)
+}
+
 type Client struct {
 	baseURL            string
 	storageAccountName string

@@ -49,7 +49,7 @@ func (c Check) VersionsSince(filename string, snapshot time.Time) ([]Version, er
 		}
 
 		marker = blobListResponse.NextMarker
-		if marker == "" || len(blobListResponse.Blobs) == 0 {
+		if marker == "" {
 			break
 		}
 	}

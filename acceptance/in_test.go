@@ -339,7 +339,7 @@ var _ = Describe("In", func() {
 						"container": %q,
 						"versioned_file": "big_file_on_azure"
 					},
-                                        "params": { "skip_download": true },
+					"params": { "skip_download": true },
 					"version": { "snapshot": %q, "version": "1.2.3" }
 				}`,
 					config.StorageAccountName,

@@ -22,7 +22,7 @@ type AzureClient interface {
 	ListBlobs(params storage.ListBlobsParameters) (storage.BlobListResponse, error)
 	GetBlobSizeInBytes(blobName string, snapshot time.Time) (int64, error)
 	Get(blobName string, snapshot time.Time) ([]byte, error)
-	DownloadBlobToFile(blobName string, file *os.File, blockSize int64) error
+	DownloadBlobToFile(blobName string, file *os.File, blockSize int64, snapshot *time.Time) error
 	UploadFromStream(blobName string, blockSize int, stream io.Reader) error
 	CreateSnapshot(blobName string) (time.Time, error)
 	GetBlobURL(blobName string) (string, error)
@@ -123,7 +123,7 @@ func (c Client) Get(blobName string, snapshot time.Time) ([]byte, error) {
 }
 
 // DownloadBlobToFile download specified blobName to specified file
-func (c Client) DownloadBlobToFile(blobName string, file *os.File, blockSize int64) error {
+func (c Client) DownloadBlobToFile(blobName string, file *os.File, blockSize int64, snapshot *time.Time) error {
 
 	u, err := url.Parse(fmt.Sprintf("https://%s.blob.%s/%s/%s",
 		c.storageAccountName, c.baseURL, c.container, blobName))
@@ -137,6 +137,10 @@ func (c Client) DownloadBlobToFile(blobName string, file *os.File, blockSize int
 	}
 
 	blobURL := azblob.NewBlobURL(*u, azblob.NewPipeline(credential, azblob.PipelineOptions{}))
+
+	if snapshot != nil && !snapshot.Equal(time.Time{}) {
+		blobURL = blobURL.WithSnapshot(snapshot.Format(time.RFC3339Nano))
+	}
 
 	ctx := context.Background()
 

@@ -38,10 +38,10 @@ func main() {
 	in := api.NewIn(azureClient)
 
 	var blobName, versionPath string
-	var snapshot time.Time
+	var snapshot *time.Time
 	if inRequest.Source.VersionedFile != "" {
 		blobName = inRequest.Source.VersionedFile
-		snapshot = inRequest.Version.Snapshot
+		snapshot = &inRequest.Version.Snapshot
 	} else if inRequest.Source.Regexp != "" {
 		blobName = inRequest.Version.Path
 		versionPath = inRequest.Version.Path

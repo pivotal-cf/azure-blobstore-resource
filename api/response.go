@@ -8,9 +8,9 @@ type Response struct {
 }
 
 type ResponseVersion struct {
-	Snapshot time.Time `json:"snapshot,omitempty"`
-	Path     string    `json:"path,omitempty"`
-	Version  string    `json:"version,omitempty"`
+	Snapshot *time.Time `json:"snapshot,omitempty"`
+	Path     string     `json:"path,omitempty"`
+	Version  string     `json:"version,omitempty"`
 }
 
 type ResponseMetadata struct {

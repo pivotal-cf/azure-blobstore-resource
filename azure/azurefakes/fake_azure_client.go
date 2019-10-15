@@ -25,12 +25,13 @@ type FakeAzureClient struct {
 		result1 time.Time
 		result2 error
 	}
-	DownloadBlobToFileStub        func(string, *os.File, int64) error
+	DownloadBlobToFileStub        func(string, *os.File, int64, *time.Time) error
 	downloadBlobToFileMutex       sync.RWMutex
 	downloadBlobToFileArgsForCall []struct {
 		arg1 string
 		arg2 *os.File
 		arg3 int64
+		arg4 *time.Time
 	}
 	downloadBlobToFileReturns struct {
 		result1 error
@@ -172,18 +173,19 @@ func (fake *FakeAzureClient) CreateSnapshotReturnsOnCall(i int, result1 time.Tim
 	}{result1, result2}
 }
 
-func (fake *FakeAzureClient) DownloadBlobToFile(arg1 string, arg2 *os.File, arg3 int64) error {
+func (fake *FakeAzureClient) DownloadBlobToFile(arg1 string, arg2 *os.File, arg3 int64, arg4 *time.Time) error {
 	fake.downloadBlobToFileMutex.Lock()
 	ret, specificReturn := fake.downloadBlobToFileReturnsOnCall[len(fake.downloadBlobToFileArgsForCall)]
 	fake.downloadBlobToFileArgsForCall = append(fake.downloadBlobToFileArgsForCall, struct {
 		arg1 string
 		arg2 *os.File
 		arg3 int64
-	}{arg1, arg2, arg3})
-	fake.recordInvocation("DownloadBlobToFile", []interface{}{arg1, arg2, arg3})
+		arg4 *time.Time
+	}{arg1, arg2, arg3, arg4})
+	fake.recordInvocation("DownloadBlobToFile", []interface{}{arg1, arg2, arg3, arg4})
 	fake.downloadBlobToFileMutex.Unlock()
 	if fake.DownloadBlobToFileStub != nil {
-		return fake.DownloadBlobToFileStub(arg1, arg2, arg3)
+		return fake.DownloadBlobToFileStub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1
@@ -198,17 +200,17 @@ func (fake *FakeAzureClient) DownloadBlobToFileCallCount() int {
 	return len(fake.downloadBlobToFileArgsForCall)
 }
 
-func (fake *FakeAzureClient) DownloadBlobToFileCalls(stub func(string, *os.File, int64) error) {
+func (fake *FakeAzureClient) DownloadBlobToFileCalls(stub func(string, *os.File, int64, *time.Time) error) {
 	fake.downloadBlobToFileMutex.Lock()
 	defer fake.downloadBlobToFileMutex.Unlock()
 	fake.DownloadBlobToFileStub = stub
 }
 
-func (fake *FakeAzureClient) DownloadBlobToFileArgsForCall(i int) (string, *os.File, int64) {
+func (fake *FakeAzureClient) DownloadBlobToFileArgsForCall(i int) (string, *os.File, int64, *time.Time) {
 	fake.downloadBlobToFileMutex.RLock()
 	defer fake.downloadBlobToFileMutex.RUnlock()
 	argsForCall := fake.downloadBlobToFileArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
 }
 
 func (fake *FakeAzureClient) DownloadBlobToFileReturns(result1 error) {

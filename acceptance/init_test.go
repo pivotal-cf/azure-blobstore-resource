@@ -107,6 +107,33 @@ func createBlobWithSnapshot(container, blobName string) *time.Time {
 	return timestamp
 }
 
+func createBlobWithSnapshotAndData(container, blobName, data string) *time.Time {
+	client, err := storage.NewBasicClient(os.Getenv("TEST_STORAGE_ACCOUNT_NAME"), os.Getenv("TEST_STORAGE_ACCOUNT_KEY"))
+	Expect(err).NotTo(HaveOccurred())
+
+	blobClient := client.GetBlobService()
+	cnt := blobClient.GetContainerReference(container)
+	blob := cnt.GetBlobReference(blobName)
+	err = blob.CreateBlockBlob(&storage.PutBlobOptions{})
+	Expect(err).NotTo(HaveOccurred())
+
+	blockID := base64.StdEncoding.EncodeToString([]byte("BlockID{0000001}"))
+	err = blob.PutBlock(blockID, []byte(data), &storage.PutBlockOptions{})
+
+	err = blob.PutBlockList([]storage.Block{
+		{
+			blockID,
+			storage.BlockStatusUncommitted,
+		},
+	}, &storage.PutBlockListOptions{})
+	Expect(err).NotTo(HaveOccurred())
+
+	timestamp, err := blob.CreateSnapshot(&storage.SnapshotOptions{})
+	Expect(err).NotTo(HaveOccurred())
+
+	return timestamp
+}
+
 func createBlob(container, blobName string) {
 	client, err := storage.NewBasicClient(os.Getenv("TEST_STORAGE_ACCOUNT_NAME"), os.Getenv("TEST_STORAGE_ACCOUNT_KEY"))
 	Expect(err).NotTo(HaveOccurred())

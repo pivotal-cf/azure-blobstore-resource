@@ -71,7 +71,7 @@ func main() {
 
 	versionsJSON, err := json.Marshal(api.Response{
 		Version: api.ResponseVersion{
-			Snapshot: &snapshot,
+			Snapshot: snapshot,
 			Path:     path,
 		},
 	})

@@ -2,12 +2,13 @@ package api_test
 
 import (
 	"errors"
-	"github.com/pivotal-cf/azure-blobstore-resource/azure/azurefakes"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/pivotal-cf/azure-blobstore-resource/azure/azurefakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -46,7 +47,7 @@ var _ = Describe("Out", func() {
 
 		It("uploads blob to azure blobstore from source directory and returns a zero time", func() {
 			var expectedStreamData []byte
-			azureClient.UploadFromStreamStub = func(blobName string,  blockSize int, stream io.Reader) error {
+			azureClient.UploadFromStreamStub = func(blobName string, blockSize int, stream io.Reader) error {
 				var err error
 				expectedStreamData, err = ioutil.ReadAll(stream)
 				Expect(err).NotTo(HaveOccurred())
@@ -68,13 +69,13 @@ var _ = Describe("Out", func() {
 			Expect(azureClient.CreateSnapshotCallCount()).To(Equal(0))
 
 			Expect(path).To(Equal("example.json"))
-			Expect(snapshot).To(Equal(time.Time{}))
+			Expect(snapshot).To(BeNil())
 		})
 
 		Context("when a snapshot is desired", func() {
 			It("uploads blob to azure blobstore from source directory and returns a snapshot time", func() {
 				var expectedStreamData []byte
-				azureClient.UploadFromStreamStub = func(blobName string,  blockSize int, stream io.Reader) error {
+				azureClient.UploadFromStreamStub = func(blobName string, blockSize int, stream io.Reader) error {
 					var err error
 					expectedStreamData, err = ioutil.ReadAll(stream)
 					Expect(err).NotTo(HaveOccurred())
@@ -97,7 +98,7 @@ var _ = Describe("Out", func() {
 				Expect(azureClient.CreateSnapshotArgsForCall(0)).To(Equal("some-blob"))
 
 				Expect(path).To(Equal("some-blob"))
-				Expect(snapshot).To(Equal(expectedSnapshot))
+				Expect(snapshot).To(Equal(&expectedSnapshot))
 			})
 		})
 
@@ -134,7 +135,7 @@ var _ = Describe("Out", func() {
 				Expect(azureClient.CreateSnapshotCallCount()).To(Equal(0))
 
 				Expect(path).To(Equal("some-blob-dir/example-1.2.json"))
-				Expect(snapshot).To(Equal(time.Time{}))
+				Expect(snapshot).To(BeNil())
 			})
 		})
 

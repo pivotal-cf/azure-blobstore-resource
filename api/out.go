@@ -17,11 +17,11 @@ func NewOut(azureClient azureClient) Out {
 	}
 }
 
-func (o Out) UploadFileToBlobstore(sourceDirectory string, filename string, blobName string, createSnapshot bool, blockSize int) (string, time.Time, error) {
+func (o Out) UploadFileToBlobstore(sourceDirectory string, filename string, blobName string, createSnapshot bool, blockSize int) (string, *time.Time, error) {
 	matches, err := filepath.Glob(filepath.Join(sourceDirectory, filename))
 	if err != nil {
 		// not tested
-		return "", time.Time{}, err
+		return "", nil, err
 	}
 
 	var fileToUpload string
@@ -33,28 +33,28 @@ func (o Out) UploadFileToBlobstore(sourceDirectory string, filename string, blob
 			blobName = filepath.Join(filepath.Dir(blobName), filepath.Base(fileToUpload))
 		}
 	} else {
-		return "", time.Time{}, fmt.Errorf("multiple files match glob: %s", filename)
+		return "", nil, fmt.Errorf("multiple files match glob: %s", filename)
 	}
 
 	file, err := os.Open(fileToUpload)
 	if err != nil {
-		return "", time.Time{}, err
+		return "", nil, err
 	}
 	defer file.Close()
 
 	err = o.azureClient.UploadFromStream(blobName, blockSize, file)
 	if err != nil {
-		return "", time.Time{}, err
+		return "", nil, err
 	}
 
 	if createSnapshot {
 		snapshot, err := o.azureClient.CreateSnapshot(blobName)
 		if err != nil {
-			return "", time.Time{}, err
+			return "", nil, err
 		}
 
-		return blobName, snapshot, nil
+		return blobName, &snapshot, nil
 	}
 
-	return blobName, time.Time{}, nil
+	return blobName, nil, nil
 }

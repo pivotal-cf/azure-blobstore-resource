@@ -62,7 +62,7 @@ var _ = Describe("In", func() {
 				config.StorageAccountKey,
 				container,
 				filename,
-				snapshotTimestamp.Format(time.RFC3339Nano),
+				snapshotTimestamp.Format(SnapshotTimeFormat),
 			))
 			Expect(err).NotTo(HaveOccurred())
 
@@ -115,7 +115,7 @@ var _ = Describe("In", func() {
 				config.StorageAccountName,
 				config.StorageAccountKey,
 				container,
-				snapshotTimestamp.Format(time.RFC3339Nano),
+				snapshotTimestamp.Format(SnapshotTimeFormat),
 			))
 			Expect(err).NotTo(HaveOccurred())
 
@@ -232,7 +232,7 @@ var _ = Describe("In", func() {
 				config.StorageAccountName,
 				config.StorageAccountKey,
 				container,
-				snapshotTimestamp.Format(time.RFC3339Nano),
+				snapshotTimestamp.Format(SnapshotTimeFormat),
 			))
 			Expect(err).NotTo(HaveOccurred())
 
@@ -300,7 +300,7 @@ var _ = Describe("In", func() {
 				config.StorageAccountName,
 				config.StorageAccountKey,
 				container,
-				snapshotTimestamp.Format(time.RFC3339Nano),
+				snapshotTimestamp.Format(SnapshotTimeFormat),
 			))
 			Expect(err).NotTo(HaveOccurred())
 
@@ -345,7 +345,7 @@ var _ = Describe("In", func() {
 					config.StorageAccountName,
 					config.StorageAccountKey,
 					container,
-					snapshotTimestamp.Format(time.RFC3339Nano),
+					snapshotTimestamp.Format(SnapshotTimeFormat),
 				))
 				Expect(err).NotTo(HaveOccurred())
 

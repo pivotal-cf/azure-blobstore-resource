@@ -16,6 +16,10 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
+const (
+	SnapshotTimeFormat = "2006-01-02T15:04:05.0000000Z"
+)
+
 func TestAcceptance(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "acceptance")

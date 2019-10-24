@@ -14,7 +14,8 @@ import (
 )
 
 const (
-	ChunkSize = 4000000 // 4Mb
+	ChunkSize          = 4000000 // 4Mb
+	SnapshotTimeFormat = "2006-01-02T15:04:05.0000000Z"
 )
 
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . AzureClient
@@ -139,7 +140,7 @@ func (c Client) DownloadBlobToFile(blobName string, file *os.File, blockSize int
 	blobURL := azblob.NewBlobURL(*u, azblob.NewPipeline(credential, azblob.PipelineOptions{}))
 
 	if snapshot != nil && !snapshot.Equal(time.Time{}) {
-		blobURL = blobURL.WithSnapshot(snapshot.Format(time.RFC3339Nano))
+		blobURL = blobURL.WithSnapshot(snapshot.Format(SnapshotTimeFormat))
 	}
 
 	ctx := context.Background()

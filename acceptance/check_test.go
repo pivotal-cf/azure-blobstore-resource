@@ -62,7 +62,7 @@ var _ = Describe("Check", func() {
 				config.StorageAccountName,
 				config.StorageAccountKey,
 				container,
-				snapshotTimestampCurrent.Format(time.RFC3339Nano),
+				snapshotTimestampCurrent.Format(SnapshotTimeFormat),
 			))
 			Expect(err).NotTo(HaveOccurred())
 
@@ -202,7 +202,7 @@ var _ = Describe("Check", func() {
 
 			var versions []struct {
 				Path     *string    `json:"path"`
-				Version     *string    `json:"version"`
+				Version  *string    `json:"version"`
 				Snapshot *time.Time `json:"snapshot"`
 			}
 			err = json.Unmarshal(output, &versions)

@@ -15,6 +15,10 @@ import (
 	"github.com/pivotal-cf/azure-blobstore-resource/azure"
 )
 
+const (
+	DefaultRetryTryTimeout = time.Duration(0)
+)
+
 func main() {
 	destinationDirectory := os.Args[1]
 
@@ -52,12 +56,18 @@ func main() {
 		blockSize = *inRequest.Params.BlockSize
 	}
 
+	retryTryTimeout := DefaultRetryTryTimeout
+	if inRequest.Params.Retry.TryTimeout != nil {
+		retryTryTimeout = time.Duration(*inRequest.Params.Retry.TryTimeout)
+	}
+
 	if !inRequest.Params.SkipDownload {
 		err = in.CopyBlobToDestination(
 			destinationDirectory,
 			blobName,
 			snapshot,
 			blockSize,
+			retryTryTimeout,
 		)
 		if err != nil {
 			log.Fatal("failed to copy blob: ", err)

@@ -295,6 +295,11 @@ var _ = Describe("In", func() {
 						"container": %q,
 						"versioned_file": "big_file_on_azure"
 					},
+					"params": {
+						"retry": {
+							"try_timeout": "1m"
+						}
+					},
 					"version": { "snapshot": %q }
 				}`,
 				config.StorageAccountName,

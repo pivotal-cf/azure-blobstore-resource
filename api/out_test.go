@@ -47,7 +47,7 @@ var _ = Describe("Out", func() {
 
 		It("uploads blob to azure blobstore from source directory and returns a zero time", func() {
 			var expectedStreamData []byte
-			azureClient.UploadFromStreamStub = func(blobName string, blockSize int, stream io.Reader) error {
+			azureClient.UploadFromStreamStub = func(blobName string, stream io.Reader, blockSize int, retryTryTimeout time.Duration) error {
 				var err error
 				expectedStreamData, err = ioutil.ReadAll(stream)
 				Expect(err).NotTo(HaveOccurred())
@@ -55,14 +55,15 @@ var _ = Describe("Out", func() {
 				return nil
 			}
 
-			path, snapshot, err := out.UploadFileToBlobstore(tempDir, "example.json", "example.json", false, 1)
+			path, snapshot, err := out.UploadFileToBlobstore(tempDir, "example.json", "example.json", false, 1, time.Second)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(azureClient.UploadFromStreamCallCount()).To(Equal(1))
 
-			blobName, blockSize, _ := azureClient.UploadFromStreamArgsForCall(0)
+			blobName, _, blockSize, retryTryTimeout := azureClient.UploadFromStreamArgsForCall(0)
 			Expect(blobName).To(Equal("example.json"))
 			Expect(blockSize).To(Equal(1))
+			Expect(retryTryTimeout).To(Equal(time.Second))
 
 			Expect(string(expectedStreamData)).To(Equal("some-data"))
 
@@ -75,7 +76,7 @@ var _ = Describe("Out", func() {
 		Context("when a snapshot is desired", func() {
 			It("uploads blob to azure blobstore from source directory and returns a snapshot time", func() {
 				var expectedStreamData []byte
-				azureClient.UploadFromStreamStub = func(blobName string, blockSize int, stream io.Reader) error {
+				azureClient.UploadFromStreamStub = func(blobName string, stream io.Reader, blockSize int, retryTryTimeout time.Duration) error {
 					var err error
 					expectedStreamData, err = ioutil.ReadAll(stream)
 					Expect(err).NotTo(HaveOccurred())
@@ -83,14 +84,15 @@ var _ = Describe("Out", func() {
 					return nil
 				}
 
-				path, snapshot, err := out.UploadFileToBlobstore(tempDir, "example.json", "some-blob", true, 1)
+				path, snapshot, err := out.UploadFileToBlobstore(tempDir, "example.json", "some-blob", true, 1, time.Second)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(azureClient.UploadFromStreamCallCount()).To(Equal(1))
 
-				blobName, blockSize, _ := azureClient.UploadFromStreamArgsForCall(0)
+				blobName, _, blockSize, retryTryTimeout := azureClient.UploadFromStreamArgsForCall(0)
 				Expect(blobName).To(Equal("some-blob"))
 				Expect(blockSize).To(Equal(1))
+				Expect(retryTryTimeout).To(Equal(time.Second))
 
 				Expect(string(expectedStreamData)).To(Equal("some-data"))
 
@@ -113,7 +115,7 @@ var _ = Describe("Out", func() {
 
 			It("uploads the file that matches the glob to azure blobstore", func() {
 				var expectedStreamData []byte
-				azureClient.UploadFromStreamStub = func(blobName string, blockSize int, stream io.Reader) error {
+				azureClient.UploadFromStreamStub = func(blobName string, stream io.Reader, blockSize int, retryTryTimeout time.Duration) error {
 					var err error
 					expectedStreamData, err = ioutil.ReadAll(stream)
 					Expect(err).NotTo(HaveOccurred())
@@ -121,14 +123,15 @@ var _ = Describe("Out", func() {
 					return nil
 				}
 
-				path, snapshot, err := out.UploadFileToBlobstore(tempDir, "some-sub-dir/example-*.json", "some-blob-dir/example-*.json", false, 1)
+				path, snapshot, err := out.UploadFileToBlobstore(tempDir, "some-sub-dir/example-*.json", "some-blob-dir/example-*.json", false, 1, time.Second)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(azureClient.UploadFromStreamCallCount()).To(Equal(1))
 
-				blobName, blockSize, _ := azureClient.UploadFromStreamArgsForCall(0)
+				blobName, _, blockSize, retryTryTimeout := azureClient.UploadFromStreamArgsForCall(0)
 				Expect(blobName).To(Equal("some-blob-dir/example-1.2.json"))
 				Expect(blockSize).To(Equal(1))
+				Expect(retryTryTimeout).To(Equal(time.Second))
 
 				Expect(string(expectedStreamData)).To(Equal("some-data"))
 
@@ -150,14 +153,14 @@ var _ = Describe("Out", func() {
 				})
 
 				It("returns an error", func() {
-					_, _, err := out.UploadFileToBlobstore(tempDir, "example-*.json", "example-*.json", false, 1)
+					_, _, err := out.UploadFileToBlobstore(tempDir, "example-*.json", "example-*.json", false, 1, time.Second)
 					Expect(err).To(MatchError("multiple files match glob: example-*.json"))
 				})
 			})
 
 			Context("when it fails to open file", func() {
 				It("returns an error", func() {
-					_, _, err := out.UploadFileToBlobstore("/fake/source/dir", "example.json", "example.json", false, 1)
+					_, _, err := out.UploadFileToBlobstore("/fake/source/dir", "example.json", "example.json", false, 1, time.Second)
 					Expect(err).To(MatchError("open /fake/source/dir/example.json: no such file or directory"))
 				})
 			})
@@ -165,7 +168,7 @@ var _ = Describe("Out", func() {
 			Context("when azure client fails to upload from stream", func() {
 				It("returns an error", func() {
 					azureClient.UploadFromStreamReturnsOnCall(0, errors.New("failed to upload blob"))
-					_, _, err := out.UploadFileToBlobstore(tempDir, "example.json", "example.json", false, 1)
+					_, _, err := out.UploadFileToBlobstore(tempDir, "example.json", "example.json", false, 1, time.Second)
 					Expect(err).To(MatchError("failed to upload blob"))
 				})
 			})
@@ -173,7 +176,7 @@ var _ = Describe("Out", func() {
 			Context("when azure client fails to create snapshot", func() {
 				It("returns an error", func() {
 					azureClient.CreateSnapshotReturnsOnCall(0, time.Now(), errors.New("failed to create snapshot"))
-					_, _, err := out.UploadFileToBlobstore(tempDir, "example.json", "example.json", true, 1)
+					_, _, err := out.UploadFileToBlobstore(tempDir, "example.json", "example.json", true, 1, time.Second)
 					Expect(err).To(MatchError("failed to create snapshot"))
 				})
 			})

@@ -25,13 +25,14 @@ type FakeAzureClient struct {
 		result1 time.Time
 		result2 error
 	}
-	DownloadBlobToFileStub        func(string, *os.File, int64, *time.Time) error
+	DownloadBlobToFileStub        func(string, *os.File, *time.Time, int64, time.Duration) error
 	downloadBlobToFileMutex       sync.RWMutex
 	downloadBlobToFileArgsForCall []struct {
 		arg1 string
 		arg2 *os.File
-		arg3 int64
-		arg4 *time.Time
+		arg3 *time.Time
+		arg4 int64
+		arg5 time.Duration
 	}
 	downloadBlobToFileReturns struct {
 		result1 error
@@ -93,12 +94,13 @@ type FakeAzureClient struct {
 		result1 storage.BlobListResponse
 		result2 error
 	}
-	UploadFromStreamStub        func(string, int, io.Reader) error
+	UploadFromStreamStub        func(string, io.Reader, int, time.Duration) error
 	uploadFromStreamMutex       sync.RWMutex
 	uploadFromStreamArgsForCall []struct {
 		arg1 string
-		arg2 int
-		arg3 io.Reader
+		arg2 io.Reader
+		arg3 int
+		arg4 time.Duration
 	}
 	uploadFromStreamReturns struct {
 		result1 error
@@ -173,19 +175,20 @@ func (fake *FakeAzureClient) CreateSnapshotReturnsOnCall(i int, result1 time.Tim
 	}{result1, result2}
 }
 
-func (fake *FakeAzureClient) DownloadBlobToFile(arg1 string, arg2 *os.File, arg3 int64, arg4 *time.Time) error {
+func (fake *FakeAzureClient) DownloadBlobToFile(arg1 string, arg2 *os.File, arg3 *time.Time, arg4 int64, arg5 time.Duration) error {
 	fake.downloadBlobToFileMutex.Lock()
 	ret, specificReturn := fake.downloadBlobToFileReturnsOnCall[len(fake.downloadBlobToFileArgsForCall)]
 	fake.downloadBlobToFileArgsForCall = append(fake.downloadBlobToFileArgsForCall, struct {
 		arg1 string
 		arg2 *os.File
-		arg3 int64
-		arg4 *time.Time
-	}{arg1, arg2, arg3, arg4})
-	fake.recordInvocation("DownloadBlobToFile", []interface{}{arg1, arg2, arg3, arg4})
+		arg3 *time.Time
+		arg4 int64
+		arg5 time.Duration
+	}{arg1, arg2, arg3, arg4, arg5})
+	fake.recordInvocation("DownloadBlobToFile", []interface{}{arg1, arg2, arg3, arg4, arg5})
 	fake.downloadBlobToFileMutex.Unlock()
 	if fake.DownloadBlobToFileStub != nil {
-		return fake.DownloadBlobToFileStub(arg1, arg2, arg3, arg4)
+		return fake.DownloadBlobToFileStub(arg1, arg2, arg3, arg4, arg5)
 	}
 	if specificReturn {
 		return ret.result1
@@ -200,17 +203,17 @@ func (fake *FakeAzureClient) DownloadBlobToFileCallCount() int {
 	return len(fake.downloadBlobToFileArgsForCall)
 }
 
-func (fake *FakeAzureClient) DownloadBlobToFileCalls(stub func(string, *os.File, int64, *time.Time) error) {
+func (fake *FakeAzureClient) DownloadBlobToFileCalls(stub func(string, *os.File, *time.Time, int64, time.Duration) error) {
 	fake.downloadBlobToFileMutex.Lock()
 	defer fake.downloadBlobToFileMutex.Unlock()
 	fake.DownloadBlobToFileStub = stub
 }
 
-func (fake *FakeAzureClient) DownloadBlobToFileArgsForCall(i int) (string, *os.File, int64, *time.Time) {
+func (fake *FakeAzureClient) DownloadBlobToFileArgsForCall(i int) (string, *os.File, *time.Time, int64, time.Duration) {
 	fake.downloadBlobToFileMutex.RLock()
 	defer fake.downloadBlobToFileMutex.RUnlock()
 	argsForCall := fake.downloadBlobToFileArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5
 }
 
 func (fake *FakeAzureClient) DownloadBlobToFileReturns(result1 error) {
@@ -490,18 +493,19 @@ func (fake *FakeAzureClient) ListBlobsReturnsOnCall(i int, result1 storage.BlobL
 	}{result1, result2}
 }
 
-func (fake *FakeAzureClient) UploadFromStream(arg1 string, arg2 int, arg3 io.Reader) error {
+func (fake *FakeAzureClient) UploadFromStream(arg1 string, arg2 io.Reader, arg3 int, arg4 time.Duration) error {
 	fake.uploadFromStreamMutex.Lock()
 	ret, specificReturn := fake.uploadFromStreamReturnsOnCall[len(fake.uploadFromStreamArgsForCall)]
 	fake.uploadFromStreamArgsForCall = append(fake.uploadFromStreamArgsForCall, struct {
 		arg1 string
-		arg2 int
-		arg3 io.Reader
-	}{arg1, arg2, arg3})
-	fake.recordInvocation("UploadFromStream", []interface{}{arg1, arg2, arg3})
+		arg2 io.Reader
+		arg3 int
+		arg4 time.Duration
+	}{arg1, arg2, arg3, arg4})
+	fake.recordInvocation("UploadFromStream", []interface{}{arg1, arg2, arg3, arg4})
 	fake.uploadFromStreamMutex.Unlock()
 	if fake.UploadFromStreamStub != nil {
-		return fake.UploadFromStreamStub(arg1, arg2, arg3)
+		return fake.UploadFromStreamStub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1
@@ -516,17 +520,17 @@ func (fake *FakeAzureClient) UploadFromStreamCallCount() int {
 	return len(fake.uploadFromStreamArgsForCall)
 }
 
-func (fake *FakeAzureClient) UploadFromStreamCalls(stub func(string, int, io.Reader) error) {
+func (fake *FakeAzureClient) UploadFromStreamCalls(stub func(string, io.Reader, int, time.Duration) error) {
 	fake.uploadFromStreamMutex.Lock()
 	defer fake.uploadFromStreamMutex.Unlock()
 	fake.UploadFromStreamStub = stub
 }
 
-func (fake *FakeAzureClient) UploadFromStreamArgsForCall(i int) (string, int, io.Reader) {
+func (fake *FakeAzureClient) UploadFromStreamArgsForCall(i int) (string, io.Reader, int, time.Duration) {
 	fake.uploadFromStreamMutex.RLock()
 	defer fake.uploadFromStreamMutex.RUnlock()
 	argsForCall := fake.uploadFromStreamArgsForCall[i]
-	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
 }
 
 func (fake *FakeAzureClient) UploadFromStreamReturns(result1 error) {

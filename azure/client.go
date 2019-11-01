@@ -23,8 +23,8 @@ type AzureClient interface {
 	ListBlobs(params storage.ListBlobsParameters) (storage.BlobListResponse, error)
 	GetBlobSizeInBytes(blobName string, snapshot time.Time) (int64, error)
 	Get(blobName string, snapshot time.Time) ([]byte, error)
-	DownloadBlobToFile(blobName string, file *os.File, blockSize int64, snapshot *time.Time) error
-	UploadFromStream(blobName string, blockSize int, stream io.Reader) error
+	DownloadBlobToFile(blobName string, file *os.File, snapshop *time.Time, blockSize int64, retryTryTimeout time.Duration) error
+	UploadFromStream(blobName string, stream io.Reader, blockSize int, retryTryTimeout time.Duration) error
 	CreateSnapshot(blobName string) (time.Time, error)
 	GetBlobURL(blobName string) (string, error)
 }
@@ -124,8 +124,7 @@ func (c Client) Get(blobName string, snapshot time.Time) ([]byte, error) {
 }
 
 // DownloadBlobToFile download specified blobName to specified file
-func (c Client) DownloadBlobToFile(blobName string, file *os.File, blockSize int64, snapshot *time.Time) error {
-
+func (c Client) DownloadBlobToFile(blobName string, file *os.File, snapshot *time.Time, blockSize int64, retryTryTimeout time.Duration) error {
 	u, err := url.Parse(fmt.Sprintf("https://%s.blob.%s/%s/%s",
 		c.storageAccountName, c.baseURL, c.container, blobName))
 	if err != nil {
@@ -137,7 +136,11 @@ func (c Client) DownloadBlobToFile(blobName string, file *os.File, blockSize int
 		return err
 	}
 
-	blobURL := azblob.NewBlobURL(*u, azblob.NewPipeline(credential, azblob.PipelineOptions{}))
+	blobURL := azblob.NewBlobURL(*u, azblob.NewPipeline(credential, azblob.PipelineOptions{
+		Retry: azblob.RetryOptions{
+			TryTimeout: retryTryTimeout,
+		},
+	}))
 
 	if snapshot != nil && !snapshot.Equal(time.Time{}) {
 		blobURL = blobURL.WithSnapshot(snapshot.Format(SnapshotTimeFormat))
@@ -153,8 +156,7 @@ func (c Client) DownloadBlobToFile(blobName string, file *os.File, blockSize int
 }
 
 // UploadFromStream adapted from https://godoc.org/github.com/Azure/azure-storage-blob-go/azblob#example-UploadStreamToBlockBlob
-func (c Client) UploadFromStream(blobName string, blockSize int, stream io.Reader) error {
-
+func (c Client) UploadFromStream(blobName string, stream io.Reader, blockSize int, retryTryTimeout time.Duration) error {
 	u, err := url.Parse(fmt.Sprintf("https://%s.blob.%s/%s/%s",
 		c.storageAccountName, c.baseURL, c.container, blobName))
 	if err != nil {
@@ -166,7 +168,11 @@ func (c Client) UploadFromStream(blobName string, blockSize int, stream io.Reade
 		return err
 	}
 
-	blockBlobURL := azblob.NewBlockBlobURL(*u, azblob.NewPipeline(credential, azblob.PipelineOptions{}))
+	blockBlobURL := azblob.NewBlockBlobURL(*u, azblob.NewPipeline(credential, azblob.PipelineOptions{
+		Retry: azblob.RetryOptions{
+			TryTimeout: retryTryTimeout,
+		},
+	}))
 
 	ctx := context.Background()
 

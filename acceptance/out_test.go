@@ -103,7 +103,10 @@ var _ = Describe("Out", func() {
 
 			_, err = io.WriteString(stdin, fmt.Sprintf(`{
 					"params": {
-						"file": "some-resource/big_file"
+						"file": "some-resource/big_file",
+						"retry": {
+							"try_timeout": "1m"
+						}
 					},
 					"source": {
 						"storage_account_name": %q,

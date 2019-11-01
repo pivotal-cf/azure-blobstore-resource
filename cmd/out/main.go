@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/storage"
 	"github.com/pivotal-cf/azure-blobstore-resource/api"
@@ -14,6 +15,7 @@ import (
 
 const (
 	BlobDefaultUploadBlockSize = 4 * 1024 * 1024 // 4 MB
+	DefaultRetryTryTimeout     = time.Duration(0)
 )
 
 func main() {
@@ -54,12 +56,18 @@ func main() {
 		blockSize = *outRequest.Params.BlockSize
 	}
 
+	retryTryTimeout := DefaultRetryTryTimeout
+	if outRequest.Params.Retry.TryTimeout != nil {
+		retryTryTimeout = time.Duration(*outRequest.Params.Retry.TryTimeout)
+	}
+
 	path, snapshot, err := out.UploadFileToBlobstore(
 		sourceDirectory,
 		outRequest.Params.File,
 		blobName,
 		createSnapshot,
 		blockSize,
+		retryTryTimeout,
 	)
 	if err != nil {
 		log.Fatal("failed to upload blob: ", err)

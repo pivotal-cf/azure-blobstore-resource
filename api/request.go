@@ -1,6 +1,10 @@
 package api
 
-import "time"
+import (
+	"time"
+
+	"github.com/pivotal-cf/azure-blobstore-resource/api/internal/types"
+)
 
 type InRequest struct {
 	Source  RequestSource    `json:"source"`
@@ -29,12 +33,18 @@ type InRequestVersion struct {
 }
 
 type InParams struct {
-	Unpack       bool   `json:"unpack"`
-	SkipDownload bool   `json:"skip_download"`
-	BlockSize    *int64 `json:"block_size,omitempty"`
+	Unpack       bool        `json:"unpack"`
+	SkipDownload bool        `json:"skip_download"`
+	BlockSize    *int64      `json:"block_size,omitempty"`
+	Retry        ParamsRetry `json:"retry,omitempty"`
 }
 
 type OutParams struct {
-	File      string `json:"file"`
-	BlockSize *int   `json:"block_size,omitempty"`
+	File      string      `json:"file"`
+	BlockSize *int        `json:"block_size,omitempty"`
+	Retry     ParamsRetry `json:"retry,omitempty"`
+}
+
+type ParamsRetry struct {
+	TryTimeout *types.MarshalableDuration `json:"try_timeout,omitempty"`
 }

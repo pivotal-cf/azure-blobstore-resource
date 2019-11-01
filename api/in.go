@@ -29,7 +29,7 @@ func NewIn(azureClient azureClient) In {
 	}
 }
 
-func (i In) CopyBlobToDestination(destinationDir, blobName string, snapshot *time.Time, blockSize int64) error {
+func (i In) CopyBlobToDestination(destinationDir, blobName string, snapshot *time.Time, blockSize int64, retryTryTimeout time.Duration) error {
 	fileName := path.Base(blobName)
 	file, err := os.Create(filepath.Join(destinationDir, fileName))
 	if err != nil {
@@ -37,7 +37,7 @@ func (i In) CopyBlobToDestination(destinationDir, blobName string, snapshot *tim
 	}
 	defer file.Close()
 
-	return i.azureClient.DownloadBlobToFile(blobName, file, blockSize, snapshot)
+	return i.azureClient.DownloadBlobToFile(blobName, file, snapshot, blockSize, retryTryTimeout)
 }
 
 func (i In) UnpackBlob(filename string) error {

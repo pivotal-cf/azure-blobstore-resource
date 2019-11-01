@@ -64,6 +64,16 @@ resources:
     container: ((test_rc_container))
     regexp: some-file-(.*)
 
+- name: version
+  type: semver
+  source:
+    driver: git
+    uri: git@github.com:pivotal-cf/azure-blobstore-resource.git
+    branch: version
+    file: current-version
+    private_key: ((github_deploy_key))
+    initial_version: 0.0.0
+
 jobs:
 - name: run-tests
   plan:
@@ -149,19 +159,36 @@ jobs:
     params:
       CONFIGURATION_FILENAME: some-file-*
 
+- name: ship-minor
+  plan:
+  - get: azure-blobstore-resource
+    passed: [test-versioning-get-rc, test-regexp-get-rc]
+  - put: version
+    params: {bump: minor}
+
+- name: base-image-patch
+  plan:
+  - get: base-image
+    trigger: true
+  - put: version
+    params: {bump: patch}
 
 - name: bump-final-image
   plan:
   - in_parallel:
     - get: azure-blobstore-resource
-      passed: [test-versioning-get-rc, test-regexp-get-rc]
-    - get: base-image
+      passed: [ship-minor]
       trigger: true
+    - get: base-image
+      passed: [base-image-patch]
+      trigger: true
+    - get: version
   - task: prepare-workspace
     file: azure-blobstore-resource/ci/tasks/prepare-workspace/task.yml
   - put: azure-blobstore-resource-final-image
     params:
       build: workspace
+      additional_tags: version/version
 
 - name: run-pr-tests
   plan:

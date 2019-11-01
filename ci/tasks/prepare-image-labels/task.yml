@@ -1,0 +1,17 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: cloudfoundry/cflinuxfs3
+
+inputs:
+  - name: azure-blobstore-resource
+  - name: version
+
+outputs:
+  - name: image-labels
+
+run:
+  path: azure-blobstore-resource/ci/tasks/prepare-image-labels/task.sh

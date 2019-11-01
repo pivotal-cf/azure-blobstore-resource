@@ -191,12 +191,16 @@ jobs:
       passed: [base-image-patch]
       trigger: true
     - get: version
-  - task: prepare-workspace
-    file: azure-blobstore-resource/ci/tasks/prepare-workspace/task.yml
+  - in_parallel:
+    - task: prepare-workspace
+      file: azure-blobstore-resource/ci/tasks/prepare-workspace/task.yml
+    - task: prepare-image-labels
+      file: azure-blobstore-resource/ci/tasks/prepare-image-labels/task.yml
   - put: azure-blobstore-resource-final-image
     params:
       build: workspace
       additional_tags: version/version
+      labels_file: image-labels/labels.json
   - put: azure-blobstore-resource
     params:
       repository: azure-blobstore-resource

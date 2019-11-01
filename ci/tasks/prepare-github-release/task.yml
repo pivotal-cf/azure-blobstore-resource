@@ -1,0 +1,19 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: ubuntu
+
+inputs:
+  - name: azure-blobstore-resource
+  - name: azure-blobstore-resource-final-image
+  - name: base-image
+  - name: version
+
+outputs:
+  - name: github-release
+
+run:
+  path: azure-blobstore-resource/ci/tasks/prepare-github-release/task.sh

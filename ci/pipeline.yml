@@ -75,6 +75,13 @@ resources:
     private_key: ((github_deploy_key))
     initial_version: 0.0.0
 
+- name: github-release
+  type: github-release
+  source:
+    owner: pivotal-cf
+    repository: azure-blobstore-resource
+    access_token: ((github_release_access_token))
+
 jobs:
 - name: run-tests
   plan:
@@ -196,6 +203,24 @@ jobs:
       tag: version/version
       only_tag: true
       tag_prefix: v
+
+- name: create-github-release
+  plan:
+  - in_parallel:
+    - get: azure-blobstore-resource
+      passed: [bump-final-image]
+      trigger: true
+    - get: azure-blobstore-resource-final-image
+    - get: base-image
+    - get: version
+  - task: prepare-github-release
+    file: azure-blobstore-resource/ci/tasks/prepare-github-release/task.yml
+  - put: github-release
+    params:
+      name: github-release/name
+      tag: version/version
+      tag_prefix: v
+      body: github-release/body
 
 - name: run-pr-tests
   plan:

@@ -1,6 +1,6 @@
 #!/bin/bash -exu
 
-ROOT=${PWD}
+ROOT="${PWD}"
 
 function main() {
   generate_name

@@ -69,8 +69,8 @@ Places the following files in the destination:
     probably not be sufficient. You should override this value based on the
     bandwidth available to the host machine and proximity to the Storage
     service. A good starting point may be something like (60 seconds per MB of
-    anticipated-payload-size)
-    [1](https://godoc.org/github.com/Azure/azure-storage-blob-go/azblob#RetryOptions).
+    anticipated-payload-size)<sup>[[1](https://godoc.org/github.com/Azure/azure-storage-blob-go/azblob#RetryOptions)]</sup>.
+    The size of the payload would be the block size, not the overall size of the blob.
     This field accepts a either an integer that uses ns as the unit or a string
     that is a decimal number with a suffix. Valid suffixes are ns, us, ms, s, m, h.
 
@@ -101,8 +101,8 @@ new file will be uploaded as a new snapshot of that file.
     probably not be sufficient. You should override this value based on the
     bandwidth available to the host machine and proximity to the Storage
     service. A good starting point may be something like (60 seconds per MB of
-    anticipated-payload-size)
-    [1](https://godoc.org/github.com/Azure/azure-storage-blob-go/azblob#RetryOptions).
+    anticipated-payload-size)<sup>[[1](https://godoc.org/github.com/Azure/azure-storage-blob-go/azblob#RetryOptions)]</sup>.
+    The size of the payload would be the block size, not the overall size of the blob.
     This field accepts a either an integer that uses ns as the unit or a string
     that is a decimal number with a suffix. Valid suffixes are ns, us, ms, s, m, h.
 

@@ -19,8 +19,9 @@ resources:
 - name: azure-blobstore-resource
   type: git
   source:
-    uri: https://github.com/pivotal-cf/azure-blobstore-resource.git
+    uri: git@github.com:pivotal-cf/azure-blobstore-resource.git
     branch: master
+    private_key: ((github_deploy_key))
 
 - name: pull-requests
   type: pull-request
@@ -189,6 +190,12 @@ jobs:
     params:
       build: workspace
       additional_tags: version/version
+  - put: azure-blobstore-resource
+    params:
+      repository: azure-blobstore-resource
+      tag: version/version
+      only_tag: true
+      tag_prefix: v
 
 - name: run-pr-tests
   plan:

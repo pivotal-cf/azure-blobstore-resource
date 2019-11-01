@@ -61,6 +61,19 @@ Places the following files in the destination:
   size of a little more than 195 GB (4 MB x 50000 blocks). The max size of a
   blob with a block size of 100 MB will be 4.75 TB (100 MB x 50000 blocks).
 
+* `retry`:
+  * `try_timeout`: *Optional.* Changes the try timeout in the retry options when
+    uploading or downloading to Azure. This is the maximum allowed time for a
+    single try of an HTTP request. A value of zero uses the default timeout.
+    NOTE: When transferring large amounts of data, the default TryTimeout will
+    probably not be sufficient. You should override this value based on the
+    bandwidth available to the host machine and proximity to the Storage
+    service. A good starting point may be something like (60 seconds per MB of
+    anticipated-payload-size)
+    [1](https://godoc.org/github.com/Azure/azure-storage-blob-go/azblob#RetryOptions).
+    This field accepts a either an integer that uses ns as the unit or a string
+    that is a decimal number with a suffix. Valid suffixes are ns, us, ms, s, m, h.
+
 ### `out`: Upload a blob to the container.
 
 Uploads a file to the container. If `regexp` is specified, the new file will be uploaded
@@ -79,6 +92,19 @@ new file will be uploaded as a new snapshot of that file.
   50,000 blocks. This means with the default of 4 MB, blobs are limited to a
   size of a little more than 195 GB (4 MB x 50000 blocks). The max size of a
   blob with a block size of 100 MB will be 4.75 TB (100 MB x 50000 blocks).
+
+* `retry`:
+  * `try_timeout`: *Optional.* Changes the try timeout in the retry options when
+    uploading or downloading to Azure. This is the maximum allowed time for a
+    single try of an HTTP request. A value of zero uses the default timeout.
+    NOTE: When transferring large amounts of data, the default TryTimeout will
+    probably not be sufficient. You should override this value based on the
+    bandwidth available to the host machine and proximity to the Storage
+    service. A good starting point may be something like (60 seconds per MB of
+    anticipated-payload-size)
+    [1](https://godoc.org/github.com/Azure/azure-storage-blob-go/azblob#RetryOptions).
+    This field accepts a either an integer that uses ns as the unit or a string
+    that is a decimal number with a suffix. Valid suffixes are ns, us, ms, s, m, h.
 
 ## Example Configuration
 

@@ -216,6 +216,8 @@ jobs:
       trigger: true
     - get: azure-blobstore-resource-final-image
     - get: base-image
+      passed: [bump-final-image]
+      trigger: true
     - get: version
   - task: prepare-github-release
     file: azure-blobstore-resource/ci/tasks/prepare-github-release/task.yml

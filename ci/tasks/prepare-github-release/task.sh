@@ -18,7 +18,7 @@ function generate_body() {
 _digest: $(cat "${ROOT}/azure-blobstore-resource-final-image/digest")_
 
 #### Base Image
-[cloudfoundry/run:tiny](https://hub.docker.com/r/cloudfoundry/run/tags?name=tiny)
+[ubuntu:bionic](https://hub.docker.com/_/ubuntu?tab=tags&name=bionic)
 _digest: $(cat "${ROOT}/base-image/digest")_
 EOF
 }

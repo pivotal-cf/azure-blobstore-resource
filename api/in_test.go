@@ -99,7 +99,6 @@ var _ = Describe("In", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = os.Stat(filepath.Join(tempDir, fixtureFilename))
-			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("no such file or directory"))
 
 			body, err := ioutil.ReadFile(filepath.Join(tempDir, innerFilename))
@@ -118,13 +117,13 @@ var _ = Describe("In", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				err = in.UnpackBlob(filepath.Join(tempDir, "example.txt"))
-				Expect(err).To(MatchError(fmt.Sprintf("format unrecognized by filename: %s", filepath.Join(tempDir, "example.txt"))))
+				Expect(err).To(MatchError(fmt.Sprintf("invalid archive: %s", filepath.Join(tempDir, "example.txt"))))
 			})
 		})
 
 		It("returns an error when un-tar fails", func() {
 			err := in.UnpackBlob("does-not-exist.tgz")
-			Expect(err).To(MatchError("opening source archive: open does-not-exist.tgz: no such file or directory"))
+			Expect(err).To(MatchError("open does-not-exist.tgz: no such file or directory"))
 		})
 	})
 })

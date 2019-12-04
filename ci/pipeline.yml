@@ -47,8 +47,8 @@ resources:
 - name: base-image
   type: docker-image
   source:
-    repository: cloudfoundry/run
-    tag: tiny
+    repository: ubuntu
+    tag: bionic
 
 - name: a-versioned-blob
   type: azure-blobstore-rc

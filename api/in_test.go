@@ -44,8 +44,6 @@ var _ = Describe("In", func() {
 
 		BeforeEach(func() {
 			snapshot = time.Date(2017, time.January, 01, 01, 01, 01, 01, time.UTC)
-
-			azureClient.GetBlobSizeInBytesReturns(api.ChunkSize*2+50, nil)
 		})
 
 		It("copies blob from azure blobstore to local destination directory", func() {
@@ -101,17 +99,17 @@ var _ = Describe("In", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = os.Stat(filepath.Join(tempDir, fixtureFilename))
+			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("no such file or directory"))
 
 			body, err := ioutil.ReadFile(filepath.Join(tempDir, innerFilename))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(body)).To(ContainSubstring(innerFileContents))
 		},
-			Entry("when the blob is a tarball", "example.tgz", filepath.Join("example", "foo.txt"), "gopher"),
-			Entry("when the blob is a zip", "example.zip", filepath.Join("example", "foo.txt"), "gopher"),
-			Entry("when the blob is a gz", "foo.txt.gz", "foo.txt", "gopher"),
+			Entry("when the blob is a tarball", "example.tar", filepath.Join("example", "foo.txt"), "gopher"),
+			Entry("when the blob is a tgz", "example.tgz", filepath.Join("example", "foo.txt"), "gopher"),
 			Entry("when the blob is a tar.gz", "example.tar.gz", filepath.Join("example", "foo.txt"), "gopher"),
-			Entry("when the blob is an archive, but doesn't have a normal extension", "example.mytype", filepath.Join("example", "foo.txt"), "gopher"),
+			Entry("when the blob is a zip", "example.zip", filepath.Join("example", "foo.txt"), "gopher"),
 		)
 
 		Context("when an invalid archive is provided", func() {
@@ -120,13 +118,13 @@ var _ = Describe("In", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				err = in.UnpackBlob(filepath.Join(tempDir, "example.txt"))
-				Expect(err).To(MatchError(fmt.Sprintf("invalid archive: %s", filepath.Join(tempDir, "example.txt"))))
+				Expect(err).To(MatchError(fmt.Sprintf("format unrecognized by filename: %s", filepath.Join(tempDir, "example.txt"))))
 			})
 		})
 
 		It("returns an error when un-tar fails", func() {
 			err := in.UnpackBlob("does-not-exist.tgz")
-			Expect(err).To(MatchError("open does-not-exist.tgz: no such file or directory"))
+			Expect(err).To(MatchError("opening source archive: open does-not-exist.tgz: no such file or directory"))
 		})
 	})
 })

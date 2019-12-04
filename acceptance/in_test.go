@@ -79,9 +79,10 @@ var _ = Describe("In", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(body)).To(ContainSubstring(innerFileContents))
 		},
-			Entry("when the blob is a tarball", "example.tgz", filepath.Join("example", "foo.txt"), "gopher"),
+			Entry("when the blob is a tarball", "example.tar", filepath.Join("example", "foo.txt"), "gopher"),
+			Entry("when the blob is a tgz", "example.tgz", filepath.Join("example", "foo.txt"), "gopher"),
+			Entry("when the blob is a tar.gz file", "example.tar.gz", filepath.Join("example", "foo.txt"), "gopher"),
 			Entry("when the blob is a zip file", "example.zip", filepath.Join("example", "foo.txt"), "gopher"),
-			Entry("when the blob is a gzipped tarball file", "example.tar.gz", filepath.Join("example", "foo.txt"), "gopher"),
 		)
 	})
 

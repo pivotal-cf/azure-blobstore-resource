@@ -2,6 +2,6 @@ FROM ubuntu:bionic
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
-    unzip
+  unzip ca-certificates
 
 ADD assets/ /opt/resource/

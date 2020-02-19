@@ -370,6 +370,23 @@ var _ = Describe("Check", func() {
 				Expect(latestVersions[2].Path).To(Equal(stringPtr("example-2.0.0.json")))
 				Expect(latestVersions[2].Version).To(Equal(stringPtr("2.0.0")))
 			})
+
+			Context("when azure returns an empty result set but has marker set on the first run", func() {
+				BeforeEach(func() {
+					azureClient.ListBlobsReturnsOnCall(0, storage.BlobListResponse{
+						NextMarker: "whatever",
+					}, nil)
+				})
+
+				It("returns results that exist on the next page", func() {
+					latestVersions, err := check.VersionsSinceRegexp("example-(.*).json", "1.2.0")
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(latestVersions).To(HaveLen(1))
+					Expect(latestVersions[0].Path).To(Equal(stringPtr("example-1.2.3.json")))
+					Expect(latestVersions[0].Version).To(Equal(stringPtr("1.2.3")))
+				})
+			})
 		})
 
 		Context("when azure client list blobs returns an error", func() {

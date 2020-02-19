@@ -86,6 +86,7 @@ func (c Check) VersionsSinceRegexp(expr, currentVersion string) ([]Version, erro
 	blobs := []storage.Blob{}
 	marker := ""
 
+	var hasRan bool
 	for {
 		blobListResponse, err := c.azureClient.ListBlobs(storage.ListBlobsParameters{
 			Include: &storage.IncludeBlobDataset{
@@ -104,9 +105,11 @@ func (c Check) VersionsSinceRegexp(expr, currentVersion string) ([]Version, erro
 		}
 
 		marker = blobListResponse.NextMarker
-		if marker == "" || len(blobListResponse.Blobs) == 0 {
+		if marker == "" || (hasRan && len(blobListResponse.Blobs) == 0) {
 			break
 		}
+
+		hasRan = true
 	}
 
 	matcher, err := regexp.Compile(expr)

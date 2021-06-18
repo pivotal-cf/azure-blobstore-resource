@@ -45,7 +45,7 @@ func (i In) UnpackBlob(filename string) error {
 	}
 
 	switch fileType {
-	case "application/gzip":
+	case "application/gzip", "application/x-gzip":
 		cmd = exec.Command("gzip", "-d", filename)
 	case "application/x-tar":
 		cmd = exec.Command("tar", "-xvf", filename, "-C", filepath.Dir(filename))
@@ -65,9 +65,9 @@ func (i In) UnpackBlob(filename string) error {
 		return errors.New(out.String())
 	}
 
-	if fileType == "application/gzip" {
+	if fileType == "application/gzip" || fileType == "application/x-gzip" {
 		decompressedGzipFilename := strings.TrimSuffix(filename, filepath.Ext(filename))
-		if filepath.Ext(filename) == ".tgz" {
+		if filepath.Ext(filename) == ".tgz" || filepath.Ext(filename) == ".tar.gz" {
 			decompressedGzipFilename = decompressedGzipFilename + ".tar"
 		}
 		err = i.UnpackBlob(decompressedGzipFilename)

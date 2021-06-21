@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"time"
 
@@ -74,7 +75,7 @@ func main() {
 		}
 
 		if inRequest.Params.Unpack {
-			err = in.UnpackBlob(filepath.Join(destinationDirectory, blobName))
+			err = in.UnpackBlob(filepath.Join(destinationDirectory, path.Base(blobName)))
 			if err != nil {
 				log.Fatal("failed to unpack blob: ", err)
 			}

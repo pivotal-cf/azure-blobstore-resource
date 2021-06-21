@@ -83,6 +83,7 @@ var _ = Describe("In", func() {
 			Entry("when the blob is a tgz", "example.tgz", filepath.Join("example", "foo.txt"), "gopher"),
 			Entry("when the blob is a tar.gz file", "example.tar.gz", filepath.Join("example", "foo.txt"), "gopher"),
 			Entry("when the blob is a zip file", "example.zip", filepath.Join("example", "foo.txt"), "gopher"),
+			Entry("when the blob to unpack is in a folder", "subdir/example.zip", filepath.Join("example", "foo.txt"), "gopher"),
 		)
 	})
 

@@ -6,9 +6,12 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+
+	"regexp"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/storage"
+	"github.com/cppforlife/go-semi-semantic/version"
 	"github.com/pivotal-cf/azure-blobstore-resource/api"
 	"github.com/pivotal-cf/azure-blobstore-resource/azure"
 )
@@ -49,6 +52,7 @@ func main() {
 		blobPath := filepath.Dir(outRequest.Source.Regexp)
 		blobBaseName := filepath.Base(outRequest.Params.File)
 		blobName = filepath.Join(blobPath, blobBaseName)
+		createSnapshot = false
 	}
 
 	blockSize := BlobDefaultUploadBlockSize
@@ -73,14 +77,40 @@ func main() {
 		log.Fatal("failed to upload blob: ", err)
 	}
 
+	var ver version.Version
 	if createSnapshot {
 		path = ""
+	} else {
+		matcher, err := regexp.Compile(outRequest.Source.Regexp)
+		if err != nil {
+			log.Fatal("failed to compile source configuration regex: ", err)
+		}
+
+		matches := matcher.FindStringSubmatch(path)
+		// No error if `len(matches) < 2` to preserve behaviour that the
+		// resource doesn't error if the regex doesn't find a match in the
+		// uploaded blob path
+		if len(matches) >= 2 {
+			var match string
+			index, found := api.FindSubexpression(matcher.SubexpNames(), "version")
+			if found {
+				match = matches[index]
+			} else {
+				match = matches[1]
+			}
+
+			ver, err = version.NewVersionFromString(match)
+			if err != nil {
+				log.Fatal("failed to convert version from string: ", err)
+			}
+		}
 	}
 
 	versionsJSON, err := json.Marshal(api.Response{
 		Version: api.ResponseVersion{
 			Snapshot: snapshot,
 			Path:     path,
+			Version:  ver.AsString(),
 		},
 	})
 	if err != nil {

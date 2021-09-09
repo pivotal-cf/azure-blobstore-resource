@@ -136,7 +136,7 @@ func (c Check) VersionsSinceRegexp(expr, currentVersion string) ([]Version, erro
 			continue // no match
 		}
 
-		index, found := findString(matcher.SubexpNames(), "version")
+		index, found := FindSubexpression(matcher.SubexpNames(), "version")
 		if found {
 			match = matches[index]
 		} else {
@@ -166,16 +166,6 @@ func (c Check) VersionsSinceRegexp(expr, currentVersion string) ([]Version, erro
 	})
 
 	return newerVersions, nil
-}
-
-func findString(items []string, searchFor string) (int, bool) {
-	for i, item := range items {
-		if item == searchFor {
-			return i, true
-		}
-	}
-
-	return -1, false
 }
 
 func stringPtr(str string) *string {

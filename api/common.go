@@ -15,3 +15,13 @@ func URLAppendTimeStamp(baseURL string, snapshot time.Time) (string, error) {
 	u.RawQuery = q.Encode()
 	return u.String(), nil
 }
+
+func FindSubexpression(subexps []string, searchFor string) (int, bool) {
+	for i, item := range subexps {
+		if item == searchFor {
+			return i, true
+		}
+	}
+
+	return -1, false
+}

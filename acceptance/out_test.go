@@ -175,13 +175,15 @@ var _ = Describe("Out", func() {
 
 			var output struct {
 				Version struct {
-					Path string `json:"path"`
+					Path    string `json:"path"`
+					Version string `json:"version"`
 				} `json:"version"`
 			}
 			err = json.Unmarshal(outputJSON, &output)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(output.Version.Path).To(Equal("some-blob-sub-dir/example-1.2.txt"))
+			Expect(output.Version.Version).To(Equal("1.2"))
 		})
 	})
 })
